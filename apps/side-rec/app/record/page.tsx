@@ -55,7 +55,8 @@ export default function RecordPage() {
       streamRef.current = stream;
       setStatus("Recording...");
 
-      const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+      const options = { mimeType: "video/webm; codecs=vp8,opus" };
+      const recorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = recorder;
 
       recorder.onstop = () => {
@@ -94,7 +95,7 @@ export default function RecordPage() {
         }
       };
 
-      recorder.start(4000); // Collect chunks every 5 seconds
+      recorder.start(10000); // Collect chunks every 5 seconds
       setIsRecording(true);
     } catch (err) {
       console.error("Could not start recording", err);
