@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
+import { mergeChunksToFile } from "../utils/ffmpegMerge";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,22 +44,20 @@ export const mergeChunks = (req: Request, res: Response): void => {
 
         const mergedPath = path.join(mergedDir, `${meetingId}-${userId}-merged.webm`);
 
-        const command = ffmpeg();
-
-        chunkFiles.forEach(chunk => { command.input(chunk) });
-
-        command
-            .on("end", () => {
-                res.status(200).json({
-                    message: "Chunks merged successfully",
-                    output: `/merged/${meetingId}-${userId}-merged.webm`
-                })
-            })
-            .on("error", (err) => {
-                console.log("Merge Error: ", err);
-                res.status(500).json({
-                    error: "Merging failed"
-                })
-            })
-            .mergeToFile(mergedPath, path.join(rootPath, "temp"))
+        mergeChunksToFile(
+          chunkFiles,
+          mergedPath,
+          () => {
+            res.status(200).json({
+              message: "Chunks merged successfully",
+              output: `/merged/${meetingId}-${userId}-merged.webm`
+            });
+          },
+          (err) => {
+            console.log("Merge Error: ", err);
+            res.status(500).json({
+              error: "Merging failed"
+            });
+          }
+        );
 }
