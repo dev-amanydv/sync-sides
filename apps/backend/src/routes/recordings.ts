@@ -1,5 +1,5 @@
 import express from "express";
-import { getMergedRecording } from "../controllers/recordingController";
+import { getMergedRecording } from "../controllers/recordingController.js";
 
 const router = express.Router();
 

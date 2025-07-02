@@ -26,5 +26,10 @@ export const getMergedRecording = ( req: Request, res: Response): void => {
         })
         return ;
     }
-    res.sendFile(mergedFile);
+    res.sendFile(mergedFile, {
+        headers: {
+          "Content-Type": "video/mp4",
+          "Cross-Origin-Resource-Policy": "cross-origin"
+        }
+      });
 };

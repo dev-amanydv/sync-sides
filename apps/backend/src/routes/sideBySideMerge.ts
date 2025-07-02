@@ -1,5 +1,5 @@
 import express from "express";
-import { mergeSideBySide } from "../controllers/sideBySideMergeController";
+import { mergeSideBySide } from "../controllers/sideBySideMergeController.js";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { mergeChunks } from "../controllers/mergeController";
+import { mergeChunks } from "../controllers/mergeController.js";
 
 const router = express.Router();
 

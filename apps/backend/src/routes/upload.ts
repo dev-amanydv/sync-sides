@@ -1,7 +1,7 @@
 
 import express from "express";
 import multer from "multer";
-import { uploadChunk } from "../controllers/uploadController";
+import { uploadChunk } from "../controllers/uploadController.js";
 
 const router = express.Router();
 

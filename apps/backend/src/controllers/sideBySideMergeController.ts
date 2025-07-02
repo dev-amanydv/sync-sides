@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { mergeSideBySideToFile } from "../utils/ffmpegMerge";
-import ffmpegPath from "ffmpeg-static";
+import { mergeSideBySideToFile } from "../utils/ffmpegMerge.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
