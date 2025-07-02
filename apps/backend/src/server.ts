@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import uploadRoutes from "./routes/upload";
 import mergeRoutes from "./routes/merge";
 import recordingRoutes from "./routes/recordings";
+import sideBySideRoutes from "./routes/sideBySideMerge";
 import dotenv from "dotenv";
 import helmet from "helmet"
 
@@ -28,6 +29,7 @@ app.use('/merged', express.static(path.join(__dirname, "..", "merged")));
 app.use('/api/upload', uploadRoutes);
 app.use('/api/merge', mergeRoutes);
 app.use('/api/recordings', recordingRoutes);
+app.use("/api/merge/side-by-side", sideBySideRoutes);
 
 
 app.get('/', (req, res) => {
