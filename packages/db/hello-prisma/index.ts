@@ -1,2 +1,4 @@
-// packages/db/hello-prisma/index.ts
-export * from './src/client';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+export default prisma;

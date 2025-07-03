@@ -2,15 +2,17 @@
   "name": "hello-prisma",
   "version": "1.0.0",
   "license": "MIT",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
-      "import": "./index.ts"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
-    "queries": "ts-node ./src/queries.ts"
+    "queries": "ts-node ./src/queries.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@prisma/client": "6.9.0",

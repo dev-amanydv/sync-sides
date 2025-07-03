@@ -32,11 +32,11 @@ async function main() {
   const meeting = await prisma.meeting.create({
     data: {
       meetingId: `meeting_${Date.now()}`,
-      hostId: user1.id,
+      hostId: 4,
       participants: {
         connect: [
-          { id: user1.id },
-          { id: user2.id }
+          { id: 1 },
+          { id: 4 }
         ]
       }
     },

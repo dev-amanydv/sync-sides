@@ -1,12 +1,8 @@
-
-
 import { Request, Response } from "express";
-import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import  prisma  from "hello-prisma";
 
-const prisma = new PrismaClient().$extends(withAccelerate());
 export const createMeeting = async (req: Request, res: Response): Promise<void> => {
-  const { title, hostId } = req.body;
+  const { title, meetingId, hostId } = req.body;
 
   if (!title || !hostId) {
     res.status(400).json({ error: "Title and hostId are required" });
@@ -17,6 +13,7 @@ export const createMeeting = async (req: Request, res: Response): Promise<void> 
     const meeting = await prisma.meeting.create({
       data: {
         title,
+        meetingId,
         host: { connect: { id: hostId } },
       },
     });
@@ -39,8 +36,8 @@ export const getMeetingHistory = async (req: Request, res: Response): Promise<vo
     const meetings = await prisma.meeting.findMany({
       where: {
         OR: [
-          { hostId: userId },
-          { participants: { some: { id: userId } } },
+          { hostId: Number(userId) },
+          { participants: { some: { id: Number(userId) } } },
         ],
       },
       include: {
@@ -89,7 +86,7 @@ export const getMeetingById = async (req: Request, res: Response): Promise<void>
 
   try {
     const meeting = await prisma.meeting.findUnique({
-      where: { id: meetingId },
+      where: { id: Number(meetingId) },
       include: {
         host: true,
         participants: true,
