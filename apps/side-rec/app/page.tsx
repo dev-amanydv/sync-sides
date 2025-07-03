@@ -23,25 +23,25 @@ export default function HomePage() {
   };
 
   return (
-    <main className="p-6">
+    <main className="p-6 w-screen h-screen flex justify-center items-center">
       <h1 className="text-2xl font-semibold mb-4">Welcome to SideRec</h1>
 
-      <div className="mb-4 space-y-2 max-w-md">
+      <div className="mb-4 flex flex-col gap-5 space-y-2 max-w-md">
         <input
-          className="border px-3 py-2 rounded w-full"
+          className="border-2 border-white text-gray-300 h-10 px-5 py-2 rounded-lg min-w-lg"
           value={meetingId}
           onChange={(e) => setMeetingId(e.target.value)}
           placeholder="Meeting ID"
         />
         <input
-          className="border px-3 py-2 rounded w-full"
+          className="border-2 border-white text-gray-300 h-10 px-5 py-2 rounded-lg min-w-lg w-full"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           placeholder="Your User ID"
         />
         <button
           onClick={handleStart}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          className="bg-blue-600 text-lg text-white py-2 min-w-lg rounded w-full"
         >
           Start Recording
         </button>
