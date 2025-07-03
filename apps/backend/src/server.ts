@@ -6,9 +6,9 @@ import uploadRoutes from "./routes/upload.js";
 import mergeRoutes from "./routes/merge.js";
 import recordingRoutes from "./routes/recordings.js";
 import sideBySideRoutes from "./routes/sideBySideMerge.js";
+import meetingRoutes from "./routes/meeting.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
-import { prisma } from "hello-prisma";
 
 
 dotenv.config();
@@ -33,6 +33,7 @@ app.use('/uploads', express.static(path.join(__dirname, "..", "uploads")));
 app.use('/merged', express.static(path.join(__dirname, "..", "merged")));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/meeting', meetingRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/merge', mergeRoutes);
 app.use('/api/recordings', recordingRoutes);
