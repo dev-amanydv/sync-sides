@@ -9,7 +9,8 @@ import sideBySideRoutes from "./routes/sideBySideMerge.js";
 import meetingRoutes from "./routes/meeting.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
-
+import http from "http";
+import { Server } from "socket.io";
 
 dotenv.config();
 
@@ -49,10 +50,29 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     res.status(500).send("Something broke!");
   });
 
-app.listen(PORT, () => {
-    console.log(`server is running on http://localhost:${PORT}`)
-})
+const server = http.createServer(app);
 
-console.log("✅ Server successfully started and is listening.");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
+io.on("connection", (socket) => {
+  console.log("🔌 A user connected:", socket.id);
 
+  socket.on("join-meeting", ({ meetingId, user }) => {
+    socket.join(meetingId);
+    io.to(meetingId).emit("user-joined", user);
+    console.log(`👥 ${user.username} joined meeting ${meetingId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ A user disconnected:", socket.id);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`✅ Server successfully started and is listening on http://localhost:${PORT}`);
+});

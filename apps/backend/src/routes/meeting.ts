@@ -4,9 +4,9 @@ import { createMeeting, getMeetingById, getMeetingHistory, joinMeeting } from ".
 const router = express.Router();
 
 router.post("/create", createMeeting);
-router.get("/history", getMeetingHistory);
-router.get("/join", joinMeeting);
-router.get("/details", getMeetingById);
+router.get("/history/:userId", getMeetingHistory);
+router.post("/join", joinMeeting);
+router.get("/details/:meetingId", getMeetingById);
 
 
 export default router;

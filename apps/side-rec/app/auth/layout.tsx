@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 
 export const metadata: Metadata = {
   title: "SideRec",
@@ -11,10 +12,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body >
+    <div>
         {children}
-      </body>
-    </html>
+    </div>
   );
 }

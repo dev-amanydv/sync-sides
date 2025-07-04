@@ -43,7 +43,7 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("userName", data.user.username);
-
+console.log("data of auth: ", data);
       setUser({
         userId: data.user.id,
         username: data.user.username,

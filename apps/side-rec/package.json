@@ -17,6 +17,7 @@
     "postcss": "^8.4.31",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.11",
     "zustand": "^5.0.6"
   },

@@ -14,12 +14,13 @@ export const createMeeting = async (req: Request, res: Response): Promise<void> 
       data: {
         title,
         meetingId,
-        host: { connect: { id: hostId } },
+        host: { connect: { id: Number(hostId) } },
       },
     });
 
     res.status(201).json({ message: "Meeting created", meeting });
   } catch (error) {
+    console.log("Error creating meeting: ", error)
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -48,12 +49,15 @@ export const getMeetingHistory = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({ meetings });
   } catch (error) {
+    console.log("Error getting history: ", error)
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 export const joinMeeting = async (req: Request, res: Response): Promise<void> => {
+  console.log("recieved request for joining")
   const { meetingId, userId } = req.body;
+  console.log("meetingId: ", meetingId, " userId joined: ", userId)
 
   if (!meetingId || !userId) {
     res.status(400).json({ error: "Meeting ID and User ID are required" });
@@ -62,23 +66,24 @@ export const joinMeeting = async (req: Request, res: Response): Promise<void> =>
 
   try {
     const meeting = await prisma.meeting.update({
-      where: { id: meetingId },
+      where: { meetingId: meetingId },
       data: {
         participants: {
-          connect: { id: userId },
+          connect: { id: Number(userId) },
         },
       },
     });
 
     res.status(200).json({ message: "User added to meeting", meeting });
   } catch (error) {
+    console.log("Error joining meeting: ", error)
     res.status(500).json({ error: "Failed to join meeting" });
   }
 };
 
 export const getMeetingById = async (req: Request, res: Response): Promise<void> => {
   const { meetingId } = req.params;
-
+console.log("requesthitted with meetingId: ", meetingId)
   if (!meetingId) {
     res.status(400).json({ error: "Meeting ID is required" });
     return;
@@ -86,7 +91,7 @@ export const getMeetingById = async (req: Request, res: Response): Promise<void>
 
   try {
     const meeting = await prisma.meeting.findUnique({
-      where: { id: Number(meetingId) },
+      where: { meetingId: meetingId },
       include: {
         host: true,
         participants: true,
@@ -100,6 +105,7 @@ export const getMeetingById = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ meeting });
   } catch (error) {
+    console.log("Error getting meeting detailes: ", error)
     res.status(500).json({ error: "Failed to fetch meeting" });
   }
 };
