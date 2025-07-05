@@ -68,28 +68,28 @@ export default function SignupPage() {
         value={formData.fullname}
         placeholder="Enter your full name"
         onChange={(e) => setFormData(prev => ({ ...prev, fullname: e.target.value }))}
-        className="px-4 py-2 border border-gray-300 rounded w-64"
+        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
       />
       <input
         type="text"
         value={formData.username}
         placeholder="Enter your username"
         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-        className="px-4 py-2 border border-gray-300 rounded w-64"
+        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
       />
       <input
         type="email"
         value={formData.email}
         placeholder="Enter your email"
         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-        className="px-4 py-2 border border-gray-300 rounded w-64"
+        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
       />
       <input
         type="password"
         value={formData.password}
         placeholder="Enter your password"
         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-        className="px-4 py-2 border border-gray-300 rounded w-64"
+        className="px-4 text-white py-2 border border-gray-300 rounded w-64"
       />
       <button
         onClick={handleSignup}

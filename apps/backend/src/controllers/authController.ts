@@ -39,8 +39,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
+  console.log("request hitted:")
   const { username, password } = req.body;
-
+console.log("username: ",username)
   if (!username || !password) {
     res.status(400).json({ error: "Username and password are required" })
     return ;
@@ -58,6 +59,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ token, user: { id: user.id, username: user.username } });
   } catch (err) {
+    console.log("error in auth: ", err)
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

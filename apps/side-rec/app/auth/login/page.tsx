@@ -59,7 +59,7 @@ console.log("data of auth: ", data);
   };
 
   return (
-    <div className="w-screen grid grid-cols-2 h-screen">
+    <div className="w-screen grid md:grid-cols-2 h-screen">
       <div className="w-full h-screen flex justify-center items-center ">
         <form onSubmit={handleLogin} className="flex min-w-96 flex-col gap-4">
           <div className="flex flex-col gap-2">
@@ -71,7 +71,7 @@ console.log("data of auth: ", data);
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, username: e.target.value }))
             }
-            className="px-4 py-2 border border-gray-300 rounded-lg"
+            className="px-4 text-white py-2 border border-gray-300 rounded-lg"
           />
           </div>
           <div className="flex flex-col gap-2">
@@ -83,7 +83,7 @@ console.log("data of auth: ", data);
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, password: e.target.value }))
             }
-            className="px-4 py-2 border border-gray-300 rounded-lg"
+            className="px-4 py-2 text-white border border-gray-300 rounded-lg"
           />
           </div>
           

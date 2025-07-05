@@ -124,7 +124,7 @@ console.log("userId before useEffect: ", user?.userId)
           placeholder="Enter Meeting ID"
           value={joinId}
           onChange={(e) => setJoinId(e.target.value)}
-          className="px-3 py-2 border rounded w-full"
+          className="px-3 text-white py-2 border rounded w-full"
         />
         <button
           onClick={() => {

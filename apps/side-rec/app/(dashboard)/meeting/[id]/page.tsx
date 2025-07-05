@@ -16,6 +16,7 @@ const MeetingPage = () => {
     { id: number; username: string; socketId?: string }[]
   >([]);
   const [otherSocketId, setOtherSocketId] = useState<string | null>(null);
+  const otherSocketIdRef = useRef<string | null>(null); // Add this line
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>(
     undefined
   );
@@ -24,6 +25,7 @@ const MeetingPage = () => {
     { id: number; username: string }[]
   >([]);
   const [meetingNoId, setMeetingNoId] = useState("")
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 console.log("meetingNoId: ", meetingNoId);
   useEffect(() => {
     const fetchInitialParticipants = async () => {
@@ -58,6 +60,12 @@ console.log("meetingNoId: ", meetingNoId);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
     const rawUserId = localStorage.getItem("userId");
     const rawUsername = localStorage.getItem("userName");
 
@@ -68,72 +76,6 @@ console.log("meetingNoId: ", meetingNoId);
     setHasHydrated(true);
   }, []);
 
-  useEffect(() => {
-    if (!meetingNoId || !user?.userId) return;
-    console.log("running socket... ")
-    socket.current = io("http://localhost:4000", {
-      transports: ["websocket"],
-    });
-
-    socket.current.on("participants-updated", (updatedUsers: any[]) => {
-      console.log("updatedUsers: ", updatedUsers);
-      setJoinedUsers(updatedUsers);
-
-      // Find the other user's socketId if present
-      const otherUser = updatedUsers.find((u) => u.id !== Number(user?.userId));
-      if (otherUser) {
-        setOtherSocketId(otherUser.socketId);
-      }
-    });
-
-    socket.current.emit("join-meeting", {
-      meetingNoId,
-      user: {
-        userId: user.userId,
-        username: user.username,
-      },
-    });
-    socket.current.on("offer", async ({ offer, from }: { offer: RTCSessionDescriptionInit; from: string }) => {
-      console.log("📨 Received offer from:", from);
-      if (!peerConnectionRef.current) createPeerConnection(socket.current);
-      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await peerConnectionRef.current?.createAnswer();
-      await peerConnectionRef.current?.setLocalDescription(answer);
-      socket.current.emit("answer", { answer, to: from });
-      console.log("📤 Sent answer to:", from);
-    });
-    
-    socket.current.on("answer", async ({ answer }: { answer: RTCSessionDescriptionInit }) => {
-      console.log("📨 Received answer");
-      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
-    });
-    
-    socket.current.on("ice-candidate", async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-      console.log("📨 Received ICE candidate");
-      if (peerConnectionRef.current) {
-        try {
-          await peerConnectionRef.current.addIceCandidate(candidate);
-          console.log("✅ ICE candidate added");
-        } catch (e) {
-          console.error("❌ Failed to add ICE candidate", e);
-        }
-      }
-    });
-    
-    socket.current.on("start-call", async ({ to }: { to: string }) => {
-      console.log("📞 Start call initiated");
-      if (!peerConnectionRef.current) createPeerConnection(socket.current);
-      const offer = await peerConnectionRef.current?.createOffer();
-      await peerConnectionRef.current?.setLocalDescription(offer);
-      socket.current.emit("offer", { offer, to });
-      console.log("📤 Sent offer to:", to);
-    });
-
-    return () => {
-      socket.current?.disconnect();
-    };
-  }, [meetingNoId, user?.userId]);
-
   const [mergeLog, setMergeLog] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -141,7 +83,7 @@ console.log("meetingNoId: ", meetingNoId);
   const chunkIndexRef = useRef(0);
   const uploadInterval = 5000;
 
-  const createPeerConnection = (socket: any) => {
+  const createPeerConnection = (socket: any,targetSocketId: string) => {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -149,18 +91,24 @@ console.log("meetingNoId: ", meetingNoId);
     });
 
     pc.onicecandidate = (event) => {
-      if (event.candidate && otherSocketId) {
+      if (event.candidate) {
         socket.emit("ice-candidate", {
           candidate: event.candidate,
-          to: otherSocketId,
+          to: targetSocketId,
         });
       }
     };
 
     pc.ontrack = (event) => {
       console.log("🎥 Remote stream received", event.streams);
-      if (remoteVideoRef.current && event.streams[0]) {
-        remoteVideoRef.current.srcObject = event.streams[0];
+      if (event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+          console.log("✅ Remote stream set on video element");
+        } else {
+          console.warn("⚠️ remoteVideoRef is not set");
+        }
       }
     };
 
@@ -171,12 +119,18 @@ console.log("meetingNoId: ", meetingNoId);
     }
 
     peerConnectionRef.current = pc;
+    console.log("🔧 Peer connection created");
   };
 
   const handleJoinMeeting = async () => {
     if (!user?.userId || !meetingId) return;
 
     // 1. Get media first
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Your browser does not support accessing camera/microphone or you're not on a secure connection (HTTPS).");
+      return;
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
@@ -201,8 +155,9 @@ console.log("meetingNoId: ", meetingNoId);
       if (res.ok) {
         alert("Successfully joined the meeting.");
         setHasJoined(true);
-        // Start the call immediately after joining
-        socket.current?.emit("start-call", { to: null }); // null = all except self        // Fetch participants and update joinedUsers
+        // Setup socket and signaling after joining meeting
+        setupSocketAfterStream();
+        // Fetch participants and update joinedUsers
         const detailRes = await fetch(
           `http://localhost:4000/api/meeting/details/${meetingId}`
         );
@@ -220,6 +175,77 @@ console.log("meetingNoId: ", meetingNoId);
       console.error("Join failed", err);
     }
   };
+  // Setup socket and signaling after stream is acquired and user has joined meeting
+  const setupSocketAfterStream = () => {
+    if (!meetingNoId || !user?.userId) return;
+
+    socket.current = io("http://localhost:4000", {
+      transports: ["websocket"],
+    });
+
+    socket.current.on("participants-updated", (updatedUsers: any[]) => {
+      console.log("updatedUsers: ", updatedUsers);
+      setJoinedUsers(updatedUsers);
+
+      const otherUser = updatedUsers.find((u) => u.id !== Number(user?.userId));
+      if (otherUser) {
+        setOtherSocketId(otherUser.socketId);
+        otherSocketIdRef.current = otherUser.socketId; // Update the ref
+      } else {
+        otherSocketIdRef.current = null; // Clear the ref if they leave
+      }
+    });
+
+    socket.current.on("offer", async ({ offer, from }: { offer: any, from: any}) => {
+      console.log("📨 Offer received from:", from);
+      if (!peerConnectionRef.current) createPeerConnection(socket.current, from);
+      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peerConnectionRef.current?.createAnswer();
+      await peerConnectionRef.current?.setLocalDescription(answer);
+      socket.current.emit("answer", { answer, to: from });
+      console.log("📤 Sent answer to:", from);
+    });
+
+    socket.current.on("answer", async ({ answer, from }: { answer: any, from: any}) => {
+      console.log("📨 Received answer from:", from);
+      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
+    });
+
+    socket.current.on("ice-candidate", async ({ candidate }: { candidate: any}) => {
+      console.log("📨 ICE candidate received");
+      if (peerConnectionRef.current) {
+        try {
+          await peerConnectionRef.current.addIceCandidate(candidate);
+          console.log("✅ ICE candidate added");
+        } catch (e) {
+          console.error("❌ Failed to add ICE candidate", e);
+        }
+      }
+    });
+
+    socket.current.on("start-call", async ({ to }: { to: any}) => {
+      console.log("📞 Start call initiated to:", to);
+      if (!peerConnectionRef.current) createPeerConnection(socket.current, to);
+      const offer = await peerConnectionRef.current?.createOffer();
+      await peerConnectionRef.current?.setLocalDescription(offer);
+      socket.current.emit("offer", { offer, to });
+      console.log("📤 Sent offer to:", to);
+    });
+
+    socket.current.emit("join-meeting", {
+      meetingNoId,
+      user: {
+        userId: user.userId,
+        username: user.username,
+      },
+    });
+
+    setTimeout(() => {
+      const targetSocketId = otherSocketIdRef.current;
+      console.log("📞 Emitting start-call to:", targetSocketId ?? "everyone");
+      socket.current?.emit("start-call", { to: targetSocketId ?? null });
+    }, 500);
+  };
 
   const startRecording = async () => {
     setStatus("Requesting permissions...");
@@ -230,8 +256,6 @@ console.log("meetingNoId: ", meetingNoId);
         audio: true,
       });
       streamRef.current = stream;
-
-      if (!peerConnectionRef.current) createPeerConnection(socket.current);
 
       setStatus("Recording...");
 
@@ -301,7 +325,7 @@ console.log("meetingNoId: ", meetingNoId);
       streamRef.current?.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
       setStatus("Recording stopped");
-    }, 500);
+    }, 1000);
   };
 
   const mergeMyChunks = async () => {
@@ -435,9 +459,13 @@ console.log("meetingNoId: ", meetingNoId);
           <option value="" disabled>
             Select partner
           </option>
-          {joinedUsers.map((user) => (
-            <option key={user.id}>{user.username}</option>
-          ))}
+          {joinedUsers
+    .filter((p) => p.id !== Number(user?.userId))
+    .map((partner) => (
+      <option key={partner.id} className="text-red-500" value={partner.id}>
+        {partner.username}
+      </option>
+    ))}
         </select>
         <button
           onClick={mergeSideBySide}
