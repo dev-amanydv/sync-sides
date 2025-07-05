@@ -13,8 +13,9 @@ const MeetingPage = () => {
   const [status, setStatus] = useState("Idle");
   const [chunkStatuses, setChunkStatuses] = useState<string[]>([]);
   const [joinedUsers, setJoinedUsers] = useState<
-    { id: number; username: string }[]
+    { id: number; username: string; socketId?: string }[]
   >([]);
+  const [otherSocketId, setOtherSocketId] = useState<string | null>(null);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>(
     undefined
   );
@@ -22,7 +23,8 @@ const MeetingPage = () => {
   const [initialParticipants, setInitialParticipants] = useState<
     { id: number; username: string }[]
   >([]);
-
+  const [meetingNoId, setMeetingNoId] = useState("")
+console.log("meetingNoId: ", meetingNoId);
   useEffect(() => {
     const fetchInitialParticipants = async () => {
       if (!meetingId) return;
@@ -31,7 +33,9 @@ const MeetingPage = () => {
           `http://localhost:4000/api/meeting/details/${meetingId}`
         );
         const data = await res.json();
+        console.log("res of getMeeting: ", data);
         if (res.ok && Array.isArray(data.meeting.participants)) {
+          setMeetingNoId(data.meeting.id);
           const joined = data.meeting.participants.filter(
             (p: any) => p.hasJoined
           );
@@ -44,12 +48,15 @@ const MeetingPage = () => {
 
     fetchInitialParticipants();
   }, [meetingId]);
-  // Zustand user and hydration
   const { user, setUser } = useStore();
   const [hasHydrated, setHasHydrated] = useState(false);
-  let socket: any = null;
+  const socket = useRef<any>(null);
   console.log("userId from store: ", user?.userId);
   console.log("meetingId: ", meetingId);
+
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+
   useEffect(() => {
     const rawUserId = localStorage.getItem("userId");
     const rawUsername = localStorage.getItem("userName");
@@ -62,36 +69,70 @@ const MeetingPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!meetingId || !user?.userId) return;
-
-    const socket = io("http://localhost:4000", {
+    if (!meetingNoId || !user?.userId) return;
+    console.log("running socket... ")
+    socket.current = io("http://localhost:4000", {
       transports: ["websocket"],
     });
 
-    socket.on("user-joined", (joinedUser: any) => {
-      setJoinedUsers((prev) => {
-        // Always include the current user if matched
-        const alreadyExists = prev.some((u) => u.id === joinedUser.userId);
-        if (!alreadyExists) {
-          return [...prev, { id: joinedUser.userId, username: joinedUser.username }];
-        }
-        return prev;
-      });
+    socket.current.on("participants-updated", (updatedUsers: any[]) => {
+      console.log("updatedUsers: ", updatedUsers);
+      setJoinedUsers(updatedUsers);
+
+      // Find the other user's socketId if present
+      const otherUser = updatedUsers.find((u) => u.id !== Number(user?.userId));
+      if (otherUser) {
+        setOtherSocketId(otherUser.socketId);
+      }
     });
 
-    // Automatically join the socket room and emit "user-joined" for real-time update
-    socket.emit("join-meeting", {
-      meetingId,
+    socket.current.emit("join-meeting", {
+      meetingNoId,
       user: {
         userId: user.userId,
         username: user.username,
       },
     });
+    socket.current.on("offer", async ({ offer, from }: { offer: RTCSessionDescriptionInit; from: string }) => {
+      console.log("📨 Received offer from:", from);
+      if (!peerConnectionRef.current) createPeerConnection(socket.current);
+      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peerConnectionRef.current?.createAnswer();
+      await peerConnectionRef.current?.setLocalDescription(answer);
+      socket.current.emit("answer", { answer, to: from });
+      console.log("📤 Sent answer to:", from);
+    });
+    
+    socket.current.on("answer", async ({ answer }: { answer: RTCSessionDescriptionInit }) => {
+      console.log("📨 Received answer");
+      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
+    });
+    
+    socket.current.on("ice-candidate", async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
+      console.log("📨 Received ICE candidate");
+      if (peerConnectionRef.current) {
+        try {
+          await peerConnectionRef.current.addIceCandidate(candidate);
+          console.log("✅ ICE candidate added");
+        } catch (e) {
+          console.error("❌ Failed to add ICE candidate", e);
+        }
+      }
+    });
+    
+    socket.current.on("start-call", async ({ to }: { to: string }) => {
+      console.log("📞 Start call initiated");
+      if (!peerConnectionRef.current) createPeerConnection(socket.current);
+      const offer = await peerConnectionRef.current?.createOffer();
+      await peerConnectionRef.current?.setLocalDescription(offer);
+      socket.current.emit("offer", { offer, to });
+      console.log("📤 Sent offer to:", to);
+    });
 
     return () => {
-      socket.disconnect();
+      socket.current?.disconnect();
     };
-  }, [meetingId, user?.userId]);
+  }, [meetingNoId, user?.userId]);
 
   const [mergeLog, setMergeLog] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -100,19 +141,52 @@ const MeetingPage = () => {
   const chunkIndexRef = useRef(0);
   const uploadInterval = 5000;
 
-  const handleJoinMeeting = async () => {
-    if (!user?.userId || !meetingId) return;
-    const socket = io("http://localhost:4000", {
-      transports: ["websocket"],
+  const createPeerConnection = (socket: any) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+      ],
     });
 
-    socket.emit("join-meeting", {
-      meetingId,
-      user: {
-        userId: user.userId,
-        username: user.username,
-      },
+    pc.onicecandidate = (event) => {
+      if (event.candidate && otherSocketId) {
+        socket.emit("ice-candidate", {
+          candidate: event.candidate,
+          to: otherSocketId,
+        });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      console.log("🎥 Remote stream received", event.streams);
+      if (remoteVideoRef.current && event.streams[0]) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, streamRef.current as MediaStream);
+      });
+    }
+
+    peerConnectionRef.current = pc;
+  };
+
+  const handleJoinMeeting = async () => {
+    if (!user?.userId || !meetingId) return;
+
+    // 1. Get media first
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
     });
+    streamRef.current = stream;
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+
     try {
       const res = await fetch("http://localhost:4000/api/meeting/join", {
         method: "POST",
@@ -127,7 +201,8 @@ const MeetingPage = () => {
       if (res.ok) {
         alert("Successfully joined the meeting.");
         setHasJoined(true);
-        // Fetch participants and update joinedUsers
+        // Start the call immediately after joining
+        socket.current?.emit("start-call", { to: null }); // null = all except self        // Fetch participants and update joinedUsers
         const detailRes = await fetch(
           `http://localhost:4000/api/meeting/details/${meetingId}`
         );
@@ -155,6 +230,9 @@ const MeetingPage = () => {
         audio: true,
       });
       streamRef.current = stream;
+
+      if (!peerConnectionRef.current) createPeerConnection(socket.current);
+
       setStatus("Recording...");
 
       if (videoRef.current) {
@@ -268,13 +346,23 @@ const MeetingPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
       <h1 className="text-3xl font-bold mb-4">Meeting ID: {meetingId}</h1>
       <p className="text-lg mb-2">User ID: {user?.userId ?? "Loading..."}</p>
       <div className="mb-4">
         <h2 className="text-white font-semibold">Participants:</h2>
-        <ul className="text-sm text-gray-400 list-disc list-inside">
-          {(hasJoined ? joinedUsers : initialParticipants).map((user) => (
+        <ul className="text-sm text-gray-400 list-none list-inside">
+          {(hasJoined
+            ? Array.from(
+                new Map(
+                  [
+                    ...joinedUsers,
+                    { id: Number(user?.userId), username: user?.username },
+                  ].map((u) => [u.id, u])
+                ).values()
+              )
+            : initialParticipants
+          ).map((user) => (
             <li key={user.id}>{user.username}</li>
           ))}
         </ul>
@@ -291,6 +379,12 @@ const MeetingPage = () => {
         ref={videoRef}
         autoPlay
         muted
+        playsInline
+        className="w-[320px] h-[240px] bg-gray-700 rounded-md mb-4"
+      />
+      <video
+        ref={remoteVideoRef}
+        autoPlay
         playsInline
         className="w-[320px] h-[240px] bg-gray-700 rounded-md mb-4"
       />

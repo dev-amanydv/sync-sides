@@ -38,12 +38,16 @@ export const getMeetingHistory = async (req: Request, res: Response): Promise<vo
       where: {
         OR: [
           { hostId: Number(userId) },
-          { participants: { some: { id: Number(userId) } } },
+          { participants: { some: { userId: Number(userId) } } },
         ],
       },
       include: {
         host: true,
-        participants: true,
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -65,16 +69,31 @@ export const joinMeeting = async (req: Request, res: Response): Promise<void> =>
   }
 
   try {
-    const meeting = await prisma.meeting.update({
+    const meeting = await prisma.meeting.findUnique({
       where: { meetingId: meetingId },
-      data: {
-        participants: {
-          connect: { id: Number(userId) },
+    });
+
+    if (!meeting) {
+      res.status(404).json({ error: "Meeting not found" });
+      return;
+    }
+
+    await prisma.participant.upsert({
+      where: {
+        userId_meetingNoId: {
+          userId: Number(userId),
+          meetingNoId: meeting.id,
         },
+      },
+      update: { hasJoined: true },
+      create: {
+        userId: Number(userId),
+        meetingNoId: meeting.id,
+        hasJoined: true,
       },
     });
 
-    res.status(200).json({ message: "User added to meeting", meeting });
+    res.status(200).json({ message: "User added to meeting" });
   } catch (error) {
     console.log("Error joining meeting: ", error)
     res.status(500).json({ error: "Failed to join meeting" });
@@ -94,7 +113,11 @@ console.log("requesthitted with meetingId: ", meetingId)
       where: { meetingId: meetingId },
       include: {
         host: true,
-        participants: true,
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 

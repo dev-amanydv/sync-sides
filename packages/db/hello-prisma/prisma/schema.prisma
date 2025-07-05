@@ -8,24 +8,34 @@ datasource db {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  username          String    @unique
-  email             String    @unique
+  id                Int           @id @default(autoincrement())
+  username          String        @unique
+  email             String        @unique
   fullname          String
   password          String    
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  meetingsHosted    Meeting[] @relation("Meeting_host")
-  meetingsJoined    Meeting[] @relation("MeetingParticipants")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  meetingsHosted    Meeting[]     @relation("Meeting_host")
+  participants      Participant[]
 }
 
 model Meeting {
-  id                Int       @id @default(autoincrement())
-  meetingId         String    @unique
-  title             String    @default("Untitled")
+  id                Int           @id @default(autoincrement())
+  meetingId         String        @unique
+  title             String        @default("Untitled")
   hostId            Int       
-  host              User      @relation("Meeting_host", fields: [hostId], references: [id])
-  participants      User[]    @relation("MeetingParticipants")
-  createdAt         DateTime  @default(now())
+  host              User          @relation("Meeting_host", fields: [hostId], references: [id])
+  participants      Participant[]
+  createdAt         DateTime      @default(now())
   mergedPath        String?
+}
+
+model Participant {
+  userId            Int
+  meetingNoId       Int
+  hasJoined         Boolean       @default(false)
+  user              User          @relation(fields: [userId], references: [id])
+  meeting           Meeting       @relation(fields: [meetingNoId], references: [id])
+
+  @@id([userId, meetingNoId])
 }
