@@ -28,6 +28,7 @@ model Meeting {
   participants      Participant[]
   createdAt         DateTime      @default(now())
   mergedPath        String?
+  durationMs        Int?
 }
 
 model Participant {
@@ -36,6 +37,8 @@ model Participant {
   hasJoined         Boolean       @default(false)
   user              User          @relation(fields: [userId], references: [id])
   meeting           Meeting       @relation(fields: [meetingNoId], references: [id])
+  joinedAt          DateTime?
+  leftAt            DateTime?
 
   @@id([userId, meetingNoId])
 }

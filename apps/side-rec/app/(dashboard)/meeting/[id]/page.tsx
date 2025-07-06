@@ -10,6 +10,7 @@ const MeetingPage = () => {
   const params = useParams();
   const meetingId = params?.id as string;
   const [isRecording, setIsRecording] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   const [status, setStatus] = useState("Idle");
   const [chunkStatuses, setChunkStatuses] = useState<string[]>([]);
   const [joinedUsers, setJoinedUsers] = useState<
@@ -24,9 +25,11 @@ const MeetingPage = () => {
   const [initialParticipants, setInitialParticipants] = useState<
     { id: number; username: string }[]
   >([]);
-  const [meetingNoId, setMeetingNoId] = useState("")
+  const [meetingNoId, setMeetingNoId] = useState("");
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-console.log("meetingNoId: ", meetingNoId);
+  const [duration, setDuration] = useState(0)
+
+  console.log("meetingNoId: ", meetingNoId);
   useEffect(() => {
     const fetchInitialParticipants = async () => {
       if (!meetingId) return;
@@ -35,9 +38,12 @@ console.log("meetingNoId: ", meetingNoId);
           `http://localhost:4000/api/meeting/details/${meetingId}`
         );
         const data = await res.json();
-        console.log("res of getMeeting: ", data);
+        console.log("data of getMeeting: ", data);
         if (res.ok && Array.isArray(data.meeting.participants)) {
           setMeetingNoId(data.meeting.id);
+          if (user?.userId && data.meeting.hostId === Number(user.userId)) {
+            setIsHost(true);
+          }
           const joined = data.meeting.participants.filter(
             (p: any) => p.hasJoined
           );
@@ -50,11 +56,44 @@ console.log("meetingNoId: ", meetingNoId);
 
     fetchInitialParticipants();
   }, [meetingId]);
+  const handleEndMeeting = async () => {
+    try {
+      await fetch("http://localhost:4000/api/meeting/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meetingId,
+          hostId: Number(user?.userId),
+        }),
+      });
+      alert("Meeting ended.");
+    } catch (err) {
+      console.error("Failed to end meeting", err);
+    }
+  };
+
+  const handleLeaveMeeting = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+
+    socket.current?.disconnect();
+    socket.current = null;
+
+    alert("You left the meeting.");
+  };
   const { user, setUser } = useStore();
   const [hasHydrated, setHasHydrated] = useState(false);
   const socket = useRef<any>(null);
-  console.log("userId from store: ", user?.userId);
-  console.log("meetingId: ", meetingId);
 
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -83,11 +122,9 @@ console.log("meetingNoId: ", meetingNoId);
   const chunkIndexRef = useRef(0);
   const uploadInterval = 5000;
 
-  const createPeerConnection = (socket: any,targetSocketId: string) => {
+  const createPeerConnection = (socket: any, targetSocketId: string) => {
     const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-      ],
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
     pc.onicecandidate = (event) => {
@@ -100,7 +137,6 @@ console.log("meetingNoId: ", meetingNoId);
     };
 
     pc.ontrack = (event) => {
-      console.log("🎥 Remote stream received", event.streams);
       if (event.streams[0]) {
         setRemoteStream(event.streams[0]);
         if (remoteVideoRef.current) {
@@ -119,15 +155,15 @@ console.log("meetingNoId: ", meetingNoId);
     }
 
     peerConnectionRef.current = pc;
-    console.log("🔧 Peer connection created");
   };
 
   const handleJoinMeeting = async () => {
     if (!user?.userId || !meetingId) return;
 
-    // 1. Get media first
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Your browser does not support accessing camera/microphone or you're not on a secure connection (HTTPS).");
+      alert(
+        "Your browser does not support accessing camera/microphone or you're not on a secure connection (HTTPS)."
+      );
       return;
     }
 
@@ -155,9 +191,7 @@ console.log("meetingNoId: ", meetingNoId);
       if (res.ok) {
         alert("Successfully joined the meeting.");
         setHasJoined(true);
-        // Setup socket and signaling after joining meeting
         setupSocketAfterStream();
-        // Fetch participants and update joinedUsers
         const detailRes = await fetch(
           `http://localhost:4000/api/meeting/details/${meetingId}`
         );
@@ -184,7 +218,6 @@ console.log("meetingNoId: ", meetingNoId);
     });
 
     socket.current.on("participants-updated", (updatedUsers: any[]) => {
-      console.log("updatedUsers: ", updatedUsers);
       setJoinedUsers(updatedUsers);
 
       const otherUser = updatedUsers.find((u) => u.id !== Number(user?.userId));
@@ -196,40 +229,53 @@ console.log("meetingNoId: ", meetingNoId);
       }
     });
 
-    socket.current.on("offer", async ({ offer, from }: { offer: any, from: any}) => {
-      console.log("📨 Offer received from:", from);
-      if (!peerConnectionRef.current) createPeerConnection(socket.current, from);
-      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await peerConnectionRef.current?.createAnswer();
-      await peerConnectionRef.current?.setLocalDescription(answer);
-      socket.current.emit("answer", { answer, to: from });
-      console.log("📤 Sent answer to:", from);
-    });
+    socket.current.on(
+      "offer",
+      async ({ offer, from }: { offer: any; from: any }) => {
+        console.log("📨 Offer received from:", from);
+        if (!peerConnectionRef.current)
+          createPeerConnection(socket.current, from);
+        await peerConnectionRef.current?.setRemoteDescription(
+          new RTCSessionDescription(offer)
+        );
+        const answer = await peerConnectionRef.current?.createAnswer();
+        await peerConnectionRef.current?.setLocalDescription(answer);
+        socket.current.emit("answer", { answer, to: from });
+      }
+    );
 
-    socket.current.on("answer", async ({ answer, from }: { answer: any, from: any}) => {
-      console.log("📨 Received answer from:", from);
-      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
-    });
+    socket.current.on(
+      "answer",
+      async ({ answer, from }: { answer: any; from: any }) => {
+        await peerConnectionRef.current?.setRemoteDescription(
+          new RTCSessionDescription(answer)
+        );
+      }
+    );
 
-    socket.current.on("ice-candidate", async ({ candidate }: { candidate: any}) => {
-      console.log("📨 ICE candidate received");
-      if (peerConnectionRef.current) {
-        try {
-          await peerConnectionRef.current.addIceCandidate(candidate);
-          console.log("✅ ICE candidate added");
-        } catch (e) {
-          console.error("❌ Failed to add ICE candidate", e);
+    socket.current.on(
+      "ice-candidate",
+      async ({ candidate }: { candidate: any }) => {
+        if (peerConnectionRef.current) {
+          try {
+            await peerConnectionRef.current.addIceCandidate(candidate);
+          } catch (e) {
+            console.error("❌ Failed to add ICE candidate", e);
+          }
         }
       }
-    });
+    );
 
-    socket.current.on("start-call", async ({ to }: { to: any}) => {
-      console.log("📞 Start call initiated to:", to);
+    socket.current.on("start-call", async ({ to }: { to: any }) => {
       if (!peerConnectionRef.current) createPeerConnection(socket.current, to);
       const offer = await peerConnectionRef.current?.createOffer();
       await peerConnectionRef.current?.setLocalDescription(offer);
       socket.current.emit("offer", { offer, to });
-      console.log("📤 Sent offer to:", to);
+    });
+
+    socket.current.on("meeting-ended", ({ durationMs }: { durationMs: number }) => {
+      console.log("📏 Meeting duration received:", durationMs);
+      setDuration(durationMs);
     });
 
     socket.current.emit("join-meeting", {
@@ -242,7 +288,6 @@ console.log("meetingNoId: ", meetingNoId);
 
     setTimeout(() => {
       const targetSocketId = otherSocketIdRef.current;
-      console.log("📞 Emitting start-call to:", targetSocketId ?? "everyone");
       socket.current?.emit("start-call", { to: targetSocketId ?? null });
     }, 500);
   };
@@ -268,7 +313,6 @@ console.log("meetingNoId: ", meetingNoId);
       mediaRecorderRef.current = recorder;
 
       recorder.onstop = () => {
-        console.log("⛔ MediaRecorder stopped");
         setStatus("MediaRecorder stopped unexpectedly");
       };
 
@@ -354,12 +398,12 @@ console.log("meetingNoId: ", meetingNoId);
 
       const data = await res.json();
       if (res.ok) {
-        setMergeLog(`✅ Side-by-side merge successful: ${data.output}`);
+        setMergeLog(` Side-by-side merge successful: ${data.output}`);
       } else {
-        setMergeLog(`❌ Side-by-side merge failed: ${data.error}`);
+        setMergeLog(` Side-by-side merge failed: ${data.error}`);
       }
     } catch (error) {
-      setMergeLog("❌ Error during side-by-side merge.");
+      setMergeLog(" Error during side-by-side merge.");
     }
   };
 
@@ -460,12 +504,16 @@ console.log("meetingNoId: ", meetingNoId);
             Select partner
           </option>
           {joinedUsers
-    .filter((p) => p.id !== Number(user?.userId))
-    .map((partner) => (
-      <option key={partner.id} className="text-red-500" value={partner.id}>
-        {partner.username}
-      </option>
-    ))}
+            .filter((p) => p.id !== Number(user?.userId))
+            .map((partner) => (
+              <option
+                key={partner.id}
+                className="text-red-500"
+                value={partner.id}
+              >
+                {partner.username}
+              </option>
+            ))}
         </select>
         <button
           onClick={mergeSideBySide}
@@ -476,6 +524,30 @@ console.log("meetingNoId: ", meetingNoId);
         </button>
         <p className="text-gray-300 mt-2 whitespace-pre-wrap">{mergeLog}</p>
       </div>
+      {hasJoined && (
+        <div className="mt-4">
+          {isHost ? (
+            <button
+              onClick={handleEndMeeting}
+              className="bg-red-700 px-4 py-2 rounded hover:bg-red-800"
+            >
+              End Meeting
+            </button>
+          ) : (
+            <button
+              onClick={handleLeaveMeeting}
+              className="bg-yellow-700 px-4 py-2 rounded hover:bg-yellow-800"
+            >
+              Leave Meeting
+            </button>
+          )}
+        </div>
+      )}
+      {duration && (
+        <p className="text-white mt-4 text-lg">
+          Meeting Duration: {(duration / 1000).toFixed(0)} seconds
+        </p>
+      )}
     </div>
   );
 };

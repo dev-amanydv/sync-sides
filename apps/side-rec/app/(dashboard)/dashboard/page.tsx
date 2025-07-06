@@ -3,13 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
 
-interface Meeting {
-  id: string;
-  title: string;
-  createdAt: string;
-  duration?: number; // in minutes
-  uploaded?: boolean;
-}
 
 const DashboardPage = () => {
   const { meetings,setUser, user,setMeetings, clearState } = useStore();
@@ -19,12 +12,12 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const rawUserId = localStorage.getItem("userId");
-    const rawUsername = localStorage.getItem("userName"); // fix the key
+    const rawUsername = localStorage.getItem("userName"); 
   
     if (rawUserId) {
       setUser({
         userId: rawUserId,
-        username: rawUsername || "", // optional fallback
+        username: rawUsername || "",
       });
     }
   }, []);
@@ -36,26 +29,21 @@ console.log("userId before useEffect: ", user?.userId)
   const generateMeetingId = () => Math.random().toString(36).substring(2, 10);
 
   const handleCreateMeeting = async () => {
-    console.log("clicked")
     if (!user?.userId) return;
     const meetingId = generateMeetingId();
-    console.log("meetingId: ", meetingId)
     const res = await fetch("http://localhost:4000/api/meeting/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ hostId: user.userId, title: "Untitled Meeting", meetingId }),
     });
-    console.log("res: ", res);
     const data = await res.json();
     console.log("data: ", data);
-    console.log("meetingId from backend: ", )
     if (data.meeting.meetingId) {
       window.location.href = `/meeting/${data.meeting.meetingId}`;
     }
   };
   useEffect(() => {
     console.log("fetching meeting history...");
-    console.log("userId during fetch:", user?.userId);
     const fetchMeetings = async () => {
       if (!user?.userId) {
         console.warn("No userId found. Skipping fetch.");
@@ -63,11 +51,10 @@ console.log("userId before useEffect: ", user?.userId)
       }
       try {
         const res = await fetch(`http://localhost:4000/api/meeting/history/${user.userId}`);
-        console.log("res: ", res)
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         console.log("Fetched meetings:", data);
-        setMeetings(data.meetings); // ⚠️ `data` is an object with `meetings`
+        setMeetings(data.meetings); 
       } catch (error) {
         console.error("Error fetching meetings:", error);
       } finally {
@@ -94,7 +81,6 @@ console.log("userId before useEffect: ", user?.userId)
         Logout
       </button>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-100 p-4 rounded">
           <p className="text-sm text-gray-600">Total Meetings</p>
@@ -102,7 +88,6 @@ console.log("userId before useEffect: ", user?.userId)
         </div>
       </div>
 
-      {/* Create Meeting */}
       <div className="flex items-center gap-4 mb-4">
         <button
           onClick={handleCreateMeeting}
@@ -136,7 +121,6 @@ console.log("userId before useEffect: ", user?.userId)
         </button>
       </div>
 
-      {/* Meeting List */}
       <div className="mt-4">
         {loading ? (
           <p>Loading meetings...</p>

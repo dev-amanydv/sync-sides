@@ -12,6 +12,7 @@ import authRoutes from "./routes/auth.js";
 import http from "http";
 import { Server } from "socket.io";
 import  prisma  from "hello-prisma";
+import { time } from "console";
 
 dotenv.config();
 
@@ -66,12 +67,12 @@ io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
   socket.on("join-meeting", async ({ meetingNoId, user }) => {
-    console.log(`📥 join-meeting called by ${user.username} for ${meetingNoId}`);
     socket.join(meetingNoId);
     socketUserMap.set(socket.id, { userId: Number(user.userId), meetingNoId });
 
     try {
       console.log(`🔧 Upserting participant userId: ${user.userId}, meetingNoId: ${meetingNoId}`);
+
       await prisma.participant.upsert({
         where: {
           userId_meetingNoId: {
@@ -81,11 +82,13 @@ io.on("connection", (socket) => {
         },
         update: {
           hasJoined: true,
+          joinedAt: new Date()
         },
         create: {
           userId: Number(user.userId),
           meetingNoId,
           hasJoined: true,
+          joinedAt: new Date()
         },
       });
 
@@ -99,8 +102,6 @@ io.on("connection", (socket) => {
         },
       });
 
-      console.log("✅ Updated participants from DB:", updatedParticipants.map(p => p.user.username));
-
       const joinedUsers = updatedParticipants.map((p) => {
         const entry = Array.from(socketUserMap.entries()).find(
           ([, value]) => value.userId === p.user.id && value.meetingNoId === meetingNoId
@@ -113,7 +114,6 @@ io.on("connection", (socket) => {
         };
       });
 
-      console.log("📡 Emitting participants-updated:", joinedUsers);
       io.to(meetingNoId).emit("participants-updated", joinedUsers);
     } catch (err) {
       console.error("❌ Error handling join-meeting:", err);
@@ -123,17 +123,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("offer", ({ offer, to }) => {
-    console.log(`📨 Offer received from ${socket.id} to ${to}`);
     io.to(to).emit("offer", { offer, from: socket.id });
   });
 
   socket.on("answer", ({ answer, to }) => {
-    console.log(`📨 Answer received from ${socket.id} to ${to}`);
     io.to(to).emit("answer", { answer, from: socket.id });
   });
 
   socket.on("ice-candidate", ({ candidate, to }) => {
-    console.log(`📨 ICE candidate from ${socket.id} to ${to}`);
     io.to(to).emit("ice-candidate", { candidate, from: socket.id });
   });
 
@@ -141,10 +138,8 @@ io.on("connection", (socket) => {
     const userData = socketUserMap.get(socket.id);
     const meetingNoId = userData?.meetingNoId;
     if (to === null && meetingNoId) {
-      console.log(`📞 Broadcasting start-call from ${socket.id} to all in ${meetingNoId}`);
       socket.to(meetingNoId).emit("start-call", { to: socket.id });
     } else if (to) {
-      console.log(`📞 Direct start-call from ${socket.id} to ${to}`);
       socket.to(to).emit("start-call", { to: socket.id });
     }
   });
@@ -153,7 +148,6 @@ io.on("connection", (socket) => {
     const userData = socketUserMap.get(socket.id);
     if (userData) {
       const { userId, meetingNoId } = userData;
-      console.log(`🔌 Disconnecting user ${userId} from meeting ${meetingNoId}`);
       try {
         await prisma.participant.update({
           where: {
@@ -164,6 +158,7 @@ io.on("connection", (socket) => {
           },
           data: {
             hasJoined: false,
+            leftAt: new Date()
           },
         });
 
@@ -188,8 +183,40 @@ io.on("connection", (socket) => {
             socketId,
           };
         });
+         
+        const hostId = await prisma.meeting.findFirst({
+          where: {
+            id: meetingNoId
+          },
+          select:{
+            hostId: true
+          }
+        })
+        if (userId === hostId?.hostId) {
+          const hostAsParticipant = await prisma.participant.findFirst({
+            where: {
+              userId: Number(hostId?.hostId),
+              meetingNoId
+            },
+            select: {
+              joinedAt: true,
+              leftAt: true
+            }
+          });
+          if (hostAsParticipant?.joinedAt && hostAsParticipant?.leftAt) {
+            const durationInMs =
+              new Date(hostAsParticipant.leftAt).getTime() -
+              new Date(hostAsParticipant.joinedAt).getTime();
 
-        console.log(`📡 Emitting updated participants after disconnect:`, joinedUsers);
+            await prisma.meeting.update({
+              where: { id: meetingNoId },
+              data: { durationMs: durationInMs }
+            });
+
+            // Send duration to frontend
+            io.to(meetingNoId).emit("meeting-ended", { durationMs: durationInMs });
+          }
+        }
         io.to(meetingNoId).emit("participants-updated", joinedUsers);
       } catch (err) {
         console.error("❌ Error handling disconnect:", err);
