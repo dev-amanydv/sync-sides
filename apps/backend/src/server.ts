@@ -213,7 +213,6 @@ io.on("connection", (socket) => {
               data: { durationMs: durationInMs }
             });
 
-            // Send duration to frontend
             io.to(meetingNoId).emit("meeting-ended", { durationMs: durationInMs });
           }
         }

@@ -23,7 +23,6 @@ export const mergeChunks = async (req: Request, res: Response): Promise<void> =>
     const mergedDir = path.join(rootPath, "merged");
     fs.mkdirSync(mergedDir, { recursive: true });
 
-    // Check if the directory exists and is accessible
     if (!fs.existsSync(userDir)) {
         res.status(404).json({
             error: "Upload directory not found for the user."
@@ -53,7 +52,6 @@ export const mergeChunks = async (req: Request, res: Response): Promise<void> =>
 
     console.log(`Starting concatenation for ${chunkFiles.length} chunks...`);
 
-    // Sequentially read and append each chunk to the write stream
     for (const chunkFile of chunkFiles) {
         try {
             const data = fs.readFileSync(chunkFile);
@@ -61,8 +59,7 @@ export const mergeChunks = async (req: Request, res: Response): Promise<void> =>
             console.log(`Appended ${path.basename(chunkFile)}`);
         } catch (err) {
             console.error(`Error reading chunk ${chunkFile}:`, err);
-            // It might be best to stop if a chunk is unreadable
-            writeStream.end(); // Close the stream
+            writeStream.end(); 
             res.status(500).json({ error: `Failed to read chunk: ${path.basename(chunkFile)}` });
             return;
         }
