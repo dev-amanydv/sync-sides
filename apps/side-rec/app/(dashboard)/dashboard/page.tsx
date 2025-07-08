@@ -10,17 +10,17 @@ const DashboardPage = () => {
   const [search, setSearch] = useState("");
   const [joinId, setJoinId] = useState("");
 
-  useEffect(() => {
-    const rawUserId = localStorage.getItem("userId");
-    const rawUsername = localStorage.getItem("userName"); 
-  
-    if (rawUserId) {
-      setUser({
-        userId: rawUserId,
-        username: rawUsername || "",
-      });
-    }
-  }, []);
+useEffect(() => {
+  const rawUserId = localStorage.getItem("userId");
+  const rawemail = localStorage.getItem("email"); 
+
+  if (rawUserId) {
+    setUser({
+      userId: rawUserId,
+      email: rawemail || "",
+    });
+  }
+}, []);
 
   const filteredMeetings = meetings.filter((meeting) =>
     meeting.title.toLowerCase().includes(search.toLowerCase())
@@ -68,7 +68,7 @@ console.log("userId before useEffect: ", user?.userId)
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl text-white font-bold mb-4">
-        Welcome, {user?.username || "User"} 👋
+        Welcome, {user?.email || "User"} 👋
       </h1>
       <button
         onClick={() => {

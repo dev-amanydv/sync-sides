@@ -6,24 +6,23 @@ import prisma  from "hello-prisma";
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
-  const { username, password, email, fullname } = req.body;
-
-  if (!username || !password || !email || !fullname) {
+  const { password, email, fullname } = req.body;
+console.log("Fullname: ", fullname, "Email: ", email, "Password: ", password)
+  if ( !password || !email || !fullname) {
     res.status(400).json({ error: "* fields are required" })
     return ;
   }
 
   try {
-    const existingUser = await prisma.user.findUnique({ where: { username } });
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-        res.status(400).json({ error: "Username already exists" })
+        res.status(400).json({ error: "email already exists" })
       return ;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
-        username: username,
         password: hashedPassword,
         email: email,
         fullname: fullname
@@ -32,7 +31,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
-    res.status(201).json({ token, user: { id: user.id, username: user.username } });
+    res.status(201).json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -40,15 +39,15 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   console.log("request hitted:")
-  const { username, password } = req.body;
-console.log("username: ",username)
-  if (!username || !password) {
-    res.status(400).json({ error: "Username and password are required" })
+  const { email, password } = req.body;
+console.log("email: ",email)
+  if (!email || !password) {
+    res.status(400).json({ error: "Email and password are required" })
     return ;
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
         res.status(401).json({ error: "Invalid credentials" })
@@ -57,7 +56,7 @@ console.log("username: ",username)
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
-    res.status(200).json({ token, user: { id: user.id, username: user.username } });
+    res.status(200).json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
     console.log("error in auth: ", err)
     res.status(500).json({ error: "Internal Server Error" });

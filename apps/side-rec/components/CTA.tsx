@@ -1,7 +1,5 @@
-import { motion } from 'motion/react';
-import { Inter } from 'next/font/google';
+
 import React from 'react'
-import Link from 'next/link';
 import { SparklesPreview } from './ui/SparklesPreview';
 import { LampDemo } from './ui/Lamp';
 

@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -35,6 +34,7 @@ export default function MergePage() {
       }
     } catch (error) {
       setLog("❌ Error merging user chunks.");
+      console.log("❌ Error merging user chunks: ", error)
     }
   };
 
@@ -55,6 +55,7 @@ export default function MergePage() {
       }
     } catch (error) {
       setLog("❌ Error during side-by-side merge.");
+      console.log("❌ Error during side-by-side merge: ", error)
     }
   };
 

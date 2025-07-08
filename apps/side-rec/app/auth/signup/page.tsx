@@ -1,104 +1,164 @@
-'use client';
+"use client";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useStore } from '../../../store/useStore';
-
-export default function SignupPage() {
-  const [formData, setFormData] = useState({
-    fullname: "",
-    username: "",
-    password: "",
-    email: "",
+const SignupSchema = z
+  .object({
+    fullname: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false);
+
+type SignupFormData = z.infer<typeof SignupSchema>;
+
+export default function SignupForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(SignupSchema),
+  });
+  const [loading, setLoading] = useState(false)
   const router = useRouter();
-  const setUser = useStore(state => state.setUser);
 
-  const handleSignup = async (e:any) => {
-    e.preventDefault()
-    console.log("button clicked")
-    if (!formData.fullname.trim()) {
-      alert("Please enter your name.");
-      return;
-    }
-
+  const onSubmit = async (data: SignupFormData) => {
+    setLoading(true)
+    console.log("Form Data:", data);
     try {
-      setLoading(true);
-      const res = await fetch('http://localhost:4000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const res = await fetch("http://localhost:4000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
+console.log(res)
 
-      setFormData({
-        username: "",
-        email: "",
-        fullname: "",
-        password: ""
-      })
-      const data = await res.json();
+      const result = await res.json();
+      console.log(result)
 
-      if (data?.user?.id) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.user.id);
-        localStorage.setItem('userName', data.user.username);
-        setUser({
-          userId: data.user.id,
-          username: data.user.username
-        });
-        router.push('/dashboard'); // redirect after signup
-      } else {
-        setError(data?.error)
+      reset();
+      if (!res.ok) {
+        throw new Error("Signup failed");
       }
-    } catch (error:any) {
-      console.error('Signup error:', error);
-      setError(error.message || 'Something went wrong')
-    } finally {
-      setLoading(false);
+      router.push("/dashboard");
+      console.log("Signup successful:", result);
+    } catch (error) {
+      console.error("Error during signup:", error);
+    } finally{
+      setLoading(false)
     }
   };
+  <div className="min-h-screen w-full ">
+  {/* Dark Sphere Grid Background */}
+  <div
+    className="absolute inset-0 z-0"
+    style={{
+      background: "#020617",
+      backgroundImage: `
+        linear-gradient(to right, rgba(71,85,105,0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(71,85,105,0.3) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%)
+      `,
+      backgroundSize: "32px 32px, 32px 32px, 100% 100%",
+    }}
+  />
+     {/* Your Content/Components */}
+</div>
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6">
-      <h1 className="text-2xl font-bold">Sign Up for SideRec</h1>
-      <input
-        type="text"
-        value={formData.fullname}
-        placeholder="Enter your full name"
-        onChange={(e) => setFormData(prev => ({ ...prev, fullname: e.target.value }))}
-        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
-      />
-      <input
-        type="text"
-        value={formData.username}
-        placeholder="Enter your username"
-        onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
-      />
-      <input
-        type="email"
-        value={formData.email}
-        placeholder="Enter your email"
-        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-        className="px-4 py-2 text-white border border-gray-300 rounded w-64"
-      />
-      <input
-        type="password"
-        value={formData.password}
-        placeholder="Enter your password"
-        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-        className="px-4 text-white py-2 border border-gray-300 rounded w-64"
-      />
-      <button
-        onClick={handleSignup}
-        className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
-        disabled={loading}
-      >
-        {loading ? 'Signing Up...' : 'Sign Up'}
-      </button>
-      <p className='text-red-600 text-sm'>{error}</p>
+    <div
+      className={`h-screen w-screen grid grid-cols-1 md:grid-cols-2`}
+
+    >
+      <div className={`col-span-1 relative flex justify-center items-center w-full  `} style={{
+              background:
+                "radial-gradient(ellipse 100% 100% at 50% 0%, #23323A, transparent 90%), #000000",
+            }}>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="max-w-lg w-full  mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
+        >
+          <h2 className="text-2xl text-white font-bold text-center">SignUp</h2>
+
+          <div>
+            <label className="block text-sm text-white font-medium">Name</label>
+            <input
+              {...register("fullname")}
+              className="mt-1 w-full text-white rounded-lg border-white border p-2"
+              placeholder="Enter your name"
+            />
+            {errors.fullname && (
+              <p className="text-red-500 text-sm">{errors.fullname.message}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm text-white font-medium">Email</label>
+            <input
+              {...register("email")}
+              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
+              placeholder="Enter your email"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email.message}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm text-white font-medium">Password</label>
+            <input
+              type="password"
+              {...register("password")}
+              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
+              placeholder="Enter password"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-white text-sm font-medium">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              {...register("confirmPassword")}
+              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
+              placeholder="Confirm password"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-white text-black py-2 rounded hover:bg-gray-400 transition"
+          >
+            {loading ? "Signing Up..." : "Sign Up"}
+          </button>
+        </form>
+      </div>
+      <div className={`col-span-1 bg-[url('/quote.jpg')] bg-no-repeat bg-center bg-cover`}>
+
+      </div>
     </div>
   );
 }

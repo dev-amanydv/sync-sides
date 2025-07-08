@@ -12,7 +12,6 @@ import authRoutes from "./routes/auth.js";
 import http from "http";
 import { Server } from "socket.io";
 import  prisma  from "hello-prisma";
-import { time } from "console";
 
 dotenv.config();
 
@@ -109,7 +108,7 @@ io.on("connection", (socket) => {
         const socketId = entry?.[0];
         return {
           id: p.user.id,
-          username: p.user.username,
+          email: p.user.email,
           socketId,
         };
       });
@@ -119,7 +118,7 @@ io.on("connection", (socket) => {
       console.error("❌ Error handling join-meeting:", err);
     }
 
-    console.log(`👥 ${user.username} joined meeting ${meetingNoId}`);
+    console.log(`👥 ${user.email} joined meeting ${meetingNoId}`);
   });
 
   socket.on("offer", ({ offer, to }) => {
@@ -179,7 +178,7 @@ io.on("connection", (socket) => {
           const socketId = entry?.[0];
           return {
             id: p.user.id,
-            username: p.user.username,
+            email: p.user.email,
             socketId,
           };
         });

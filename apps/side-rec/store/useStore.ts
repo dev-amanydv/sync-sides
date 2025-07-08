@@ -3,11 +3,11 @@ import { create } from 'zustand';
 type State = {
   user: {
     userId: string;
-    username: string;
+    email: string;
   } | null;
   meetings: any[];
   meetingId: string | null;
-  setUser: (user: { userId: string; username: string }) => void;
+  setUser: (user: { userId: string; email: string }) => void;
   setMeetings: (meetings: any[]) => void;
   setMeetingId: (id: string) => void;
   clearState: () => void;

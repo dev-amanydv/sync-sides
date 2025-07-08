@@ -6,7 +6,7 @@ import { useStore } from "../../../store/useStore";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -18,8 +18,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Username and password are required");
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError("email and password are required");
       return;
     }
 
@@ -42,11 +42,11 @@ export default function LoginPage() {
       // Persist login
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
-      localStorage.setItem("userName", data.user.username);
+      localStorage.setItem("email", data.user.email);
 console.log("data of auth: ", data);
       setUser({
         userId: data.user.id,
-        username: data.user.username,
+        email: data.user.email,
       });
 
       router.push("/dashboard");
@@ -63,13 +63,13 @@ console.log("data of auth: ", data);
       <div className="w-full h-screen flex justify-center items-center ">
         <form onSubmit={handleLogin} className="flex min-w-96 flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="">Username</h1>
+            <h1 className="">email</h1>
             <input
             type="text"
-            placeholder="Username"
-            value={formData.username}
+            placeholder="email"
+            value={formData.email}
             onChange={(e) =>
-              setFormData((prev) => ({ ...prev, username: e.target.value }))
+              setFormData((prev) => ({ ...prev, email: e.target.value }))
             }
             className="px-4 text-white py-2 border border-gray-300 rounded-lg"
           />
@@ -108,7 +108,6 @@ console.log("data of auth: ", data);
       </div>
 
       <div className="overflow-hidden">
-        <img src="/rough.jpeg" alt=" h-screen" />
       </div>
     </div>
   );

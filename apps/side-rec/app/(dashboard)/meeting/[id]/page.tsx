@@ -14,7 +14,7 @@ const MeetingPage = () => {
   const [status, setStatus] = useState("Idle");
   const [chunkStatuses, setChunkStatuses] = useState<string[]>([]);
   const [joinedUsers, setJoinedUsers] = useState<
-    { id: number; username: string; socketId?: string }[]
+    { id: number; email: string; socketId?: string }[]
   >([]);
   const [otherSocketId, setOtherSocketId] = useState<string | null>(null);
   const otherSocketIdRef = useRef<string | null>(null); // Add this line
@@ -23,7 +23,7 @@ const MeetingPage = () => {
   );
   const [hasJoined, setHasJoined] = useState(false);
   const [initialParticipants, setInitialParticipants] = useState<
-    { id: number; username: string }[]
+    { id: number; email: string }[]
   >([]);
   const [meetingNoId, setMeetingNoId] = useState("");
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -56,6 +56,7 @@ const MeetingPage = () => {
 
     fetchInitialParticipants();
   }, [meetingId]);
+  console.log(otherSocketId)
   const handleEndMeeting = async () => {
     try {
       await fetch("http://localhost:4000/api/meeting/end", {
@@ -106,10 +107,10 @@ const MeetingPage = () => {
 
   useEffect(() => {
     const rawUserId = localStorage.getItem("userId");
-    const rawUsername = localStorage.getItem("userName");
+    const rawemail = localStorage.getItem("email");
 
     if (rawUserId) {
-      setUser({ userId: rawUserId, username: rawUsername || "" });
+      setUser({ userId: rawUserId, email: rawemail || "" });
     }
 
     setHasHydrated(true);
@@ -282,7 +283,7 @@ const MeetingPage = () => {
       meetingNoId,
       user: {
         userId: user.userId,
-        username: user.username,
+        email: user.email,
       },
     });
 
@@ -425,13 +426,13 @@ const MeetingPage = () => {
                 new Map(
                   [
                     ...joinedUsers,
-                    { id: Number(user?.userId), username: user?.username },
+                    { id: Number(user?.userId), email: user?.email },
                   ].map((u) => [u.id, u])
                 ).values()
               )
             : initialParticipants
           ).map((user) => (
-            <li key={user.id}>{user.username}</li>
+            <li key={user.id}>{user.email}</li>
           ))}
         </ul>
       </div>
@@ -511,7 +512,7 @@ const MeetingPage = () => {
                 className="text-red-500"
                 value={partner.id}
               >
-                {partner.username}
+                {partner.email}
               </option>
             ))}
         </select>

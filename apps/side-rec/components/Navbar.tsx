@@ -14,7 +14,7 @@ const Navbar = () => {
         <button className='text-white cursor-pointer hover:bg-transparent border-[1px] border-transparent hover:border-[1px] hover:border-cyan-500 transition ease-in-out duration-300 px-4 py-2 rounded-full'> Login</button>
         </Link>
         <Link href={'/auth/signup'}>
-        <button className='flex hover:bg-transparent cursor-pointer border-[1px] border-transparent hover:border-[1px] hover:border-cyan-500 transition ease-in-out duration-300 gap-2 bg-cyan-800/40 px-3 py-2 rounded-full  items-center '><RxAvatar className='text-white text-2xl' /><h1 className='text-white'>Create Account</h1></button>
+        <button className='flex cursor-pointer hover:bg-gray-950 border-[1px] border-transparent hover:border-[1px] hover:border-cyan-500 transition ease-in-out duration-300 gap-2 bg-cyan-800/40 px-3 py-2 rounded-full  items-center '><RxAvatar className='text-white text-2xl' /><h1 className='text-white'>Create Account</h1></button>
         </Link>
       </div>
     </motion.div>
