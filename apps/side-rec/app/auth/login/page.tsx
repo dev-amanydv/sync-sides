@@ -1,114 +1,128 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useStore } from "../../../store/useStore";
+import Image from "next/image";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+const LoginSchema = z
+  .object({
+    email: z.string().email("Invalid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  })
+
+type LoginFormData = z.infer<typeof LoginSchema>;
+
+export default function LoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(LoginSchema),
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [log, setLog] = useState("");
   const router = useRouter();
-  const setUser = useStore((state) => state.setUser);
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!formData.email.trim() || !formData.password.trim()) {
-      setError("email and password are required");
-      return;
-    }
-
+  const onSubmit = async (data: LoginFormData) => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const res = await fetch("http://localhost:4000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      const res = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
       });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.error || "Invalid credentials");
-        return;
-      }
-
-      const data = await res.json();
-      // Persist login
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.user.id);
-      localStorage.setItem("email", data.user.email);
-console.log("data of auth: ", data);
-      setUser({
-        userId: data.user.id,
-        email: data.user.email,
-      });
-
-      router.push("/dashboard");
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Something went wrong");
+      if (res?.ok) {
+        reset();
+        router.push("/dashboard");
+      } else {
+        if (res?.error === "CredentialsSignin") {
+          setLog("Invalid email or password");
+        } else {
+          setLog("Something went wrong. Try again.");
+        }      }
+    } catch (error) {
+      console.error("Error during login:", error);
     } finally {
       setLoading(false);
     }
   };
 
+
   return (
-    <div className="w-screen grid md:grid-cols-2 h-screen">
-      <div className="w-full h-screen flex justify-center items-center ">
-        <form onSubmit={handleLogin} className="flex min-w-96 flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <h1 className="">email</h1>
-            <input
-            type="text"
-            placeholder="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="px-4 text-white py-2 border border-gray-300 rounded-lg"
-          />
+    <div className={`h-screen w-screen grid grid-cols-1 md:grid-cols-2`}>
+      <div
+        className={`col-span-1 relative flex justify-center items-center w-full  `}
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 0%, #23323A, transparent 90%), #000000",
+        }}
+      >
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="max-w-lg w-full flex justify-center gap-10 items-center flex-col   mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
+        >
+          <div className="flex flex-col justify-center gap-2 items-center">
+          <h1 className="text-xl text-gray-300">Welcomes Back!</h1>
+            <Image src={"/logo.svg"} width={400} height={200} alt="logo" />
           </div>
-          <div className="flex flex-col gap-2">
-            <h1>Password</h1>
-            <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, password: e.target.value }))
-            }
-            className="px-4 py-2 text-white border border-gray-300 rounded-lg"
-          />
+          <div className="w-full max-w-lg flex flex-col gap-5">
+            {/* Email */}
+            <div>
+              <label className="block text-sm text-gray-300 font-medium">
+                Email
+              </label>
+              <input autoFocus required
+                {...register("email")}
+                className="mt-1 text-gray-300 border-gray-300 w-full border p-2 rounded-lg"
+                placeholder="Enter your email"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm text-gray-300 font-medium">
+                Password
+              </label>
+              <input required
+                type="password"
+                {...register("password")}
+                className="mt-1 text-gray-300 border-gray-300 w-full border p-2 rounded-lg"
+                placeholder="Enter password"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit" disabled={loading}
+              className="w-full mt-5 bg-white text-black py-2 rounded hover:bg-gray-400 transition"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+            <p role="alert" className="text-red-500 text-center">{log}</p>
+
+            <div className="border-[1px] border-gray-400 my-5 mx-10">
+            </div>
+            <div className="text-white mx-auto">Don't have an account? <Link href={'/auth/signup'}><button className="font-bold text-blue-700">Signup</button></Link></div>
           </div>
-          
-          
-
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2 my-5 rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-          <p className="text-sm text-center">
-            Don&apos;t have an account?{" "}
-            <a href="/auth/signup" className="text-blue-600 underline">
-              Sign up
-            </a>
-          </p>
         </form>
       </div>
-
-      <div className="overflow-hidden">
-      </div>
+      <div
+        className={`col-span-1 bg-[url('/quote.jpg')] bg-no-repeat bg-center bg-cover`}
+      ></div>
     </div>
   );
 }

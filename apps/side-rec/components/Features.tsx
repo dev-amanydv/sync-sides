@@ -35,7 +35,7 @@ const Features = () => {
           <Image
             src="/rec.gif"
             width={200}
-            height={300}
+            height={300} unoptimized
             className="w-[50px] md:w-[50px] absolute top-5 md:top-5 right-2 md:right-5 opacity-80 z-40"
             alt="spotlight"
           />

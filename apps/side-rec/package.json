@@ -19,6 +19,7 @@
     "@tsparticles/slim": "^3.8.1",
     "clsx": "^2.1.1",
     "motion": "^12.23.0",
+    "hello-prisma": "*",
     "next": "^15.3.0",
     "postcss": "^8.4.31",
     "react": "^19.1.0",

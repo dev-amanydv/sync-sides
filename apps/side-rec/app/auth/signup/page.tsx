@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 const SignupSchema = z
   .object({
@@ -28,11 +30,12 @@ export default function SignupForm() {
   } = useForm<SignupFormData>({
     resolver: zodResolver(SignupSchema),
   });
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [log, setLog] = useState("")
   const router = useRouter();
 
   const onSubmit = async (data: SignupFormData) => {
-    setLoading(true)
+    setLoading(true);
     console.log("Form Data:", data);
     try {
       const res = await fetch("http://localhost:4000/api/auth/signup", {
@@ -42,123 +45,144 @@ export default function SignupForm() {
         },
         body: JSON.stringify(data),
       });
-console.log(res)
 
       const result = await res.json();
-      console.log(result)
 
-      reset();
+      console.log(result);
+
       if (!res.ok) {
+        setLog(result.error)
+        console.log("Log: ", result.error)
         throw new Error("Signup failed");
       }
+      reset();
       router.push("/dashboard");
       console.log("Signup successful:", result);
     } catch (error) {
       console.error("Error during signup:", error);
-    } finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
   };
   <div className="min-h-screen w-full ">
-  {/* Dark Sphere Grid Background */}
-  <div
-    className="absolute inset-0 z-0"
-    style={{
-      background: "#020617",
-      backgroundImage: `
+    {/* Dark Sphere Grid Background */}
+    <div
+      className="absolute inset-0 z-0"
+      style={{
+        background: "#020617",
+        backgroundImage: `
         linear-gradient(to right, rgba(71,85,105,0.3) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(71,85,105,0.3) 1px, transparent 1px),
         radial-gradient(circle at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%)
       `,
-      backgroundSize: "32px 32px, 32px 32px, 100% 100%",
-    }}
-  />
-     {/* Your Content/Components */}
-</div>
+        backgroundSize: "32px 32px, 32px 32px, 100% 100%",
+      }}
+    />
+    {/* Your Content/Components */}
+  </div>;
 
   return (
-    <div
-      className={`h-screen w-screen grid grid-cols-1 md:grid-cols-2`}
-
-    >
-      <div className={`col-span-1 relative flex justify-center items-center w-full  `} style={{
-              background:
-                "radial-gradient(ellipse 100% 100% at 50% 0%, #23323A, transparent 90%), #000000",
-            }}>
+    <div className={`h-screen w-screen grid grid-cols-1 md:grid-cols-2`}>
+      <div
+        className={`col-span-1 relative flex justify-center items-center w-full  `}
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 0%, #23323A, transparent 90%), #000000",
+        }}
+      >
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="max-w-lg w-full  mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
+          className="max-w-lg w-full flex justify-center items-center flex-col   mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
         >
-          <h2 className="text-2xl text-white font-bold text-center">SignUp</h2>
-
-          <div>
-            <label className="block text-sm text-white font-medium">Name</label>
-            <input
-              {...register("fullname")}
-              className="mt-1 w-full text-white rounded-lg border-white border p-2"
-              placeholder="Enter your name"
-            />
-            {errors.fullname && (
-              <p className="text-red-500 text-sm">{errors.fullname.message}</p>
-            )}
+          <div className="flex flex-col justify-center items-center">
+            <Image src={"/logo.svg"} width={400} height={200} alt="logo" />
+            <h1 className="text-xl text-gray-300">Welcomes You!</h1>
           </div>
+          <div className="w-full max-w-lg flex flex-col gap-5">
+            <div>
+              <label className="block text-sm text-gray-300 font-medium">
+                Name
+              </label>
+              <input
+                {...register("fullname")}
+                className="mt-1 w-full text-gray-300 rounded-lg border-gray-300 border p-2"
+                placeholder="Enter your name"
+              />
+              {errors.fullname && (
+                <p className="text-red-500 text-sm">
+                  {errors.fullname.message}
+                </p>
+              )}
+            </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm text-white font-medium">Email</label>
-            <input
-              {...register("email")}
-              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
-              placeholder="Enter your email"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm">{errors.email.message}</p>
-            )}
+            {/* Email */}
+            <div>
+              <label className="block text-sm text-gray-300 font-medium">
+                Email
+              </label>
+              <input
+                {...register("email")}
+                className="mt-1 text-gray-300 border-gray-300 w-full border p-2 rounded-lg"
+                placeholder="Enter your email"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm text-gray-300 font-medium">
+                Password
+              </label>
+              <input
+                type="password"
+                {...register("password")}
+                className="mt-1 text-gray-300 border-gray-300 w-full border p-2 rounded-lg"
+                placeholder="Enter password"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-gray-300 text-sm font-medium">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                {...register("confirmPassword")}
+                className="mt-1 text-gray-300 border-gray-300 w-full border p-2 rounded-lg"
+                placeholder="Confirm password"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-5 bg-white text-black py-2 rounded hover:bg-gray-400 transition"
+            >
+              {loading ? "Signing Up..." : "Sign Up"}
+            </button>
+            
+            <p className="text-red-500 text-center">{log}</p>
+            <div className="border-[1px] border-gray-400 my-5 mx-10">
+            </div>
+            <div className="text-white mx-auto">Already have an account? <Link href={'/auth/login'}><button className="font-bold text-blue-700">Login</button></Link></div>
           </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm text-white font-medium">Password</label>
-            <input
-              type="password"
-              {...register("password")}
-              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
-              placeholder="Enter password"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm">{errors.password.message}</p>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-white text-sm font-medium">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              {...register("confirmPassword")}
-              className="mt-1 text-white border-white w-full border p-2 rounded-lg"
-              placeholder="Confirm password"
-            />
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-sm">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-white text-black py-2 rounded hover:bg-gray-400 transition"
-          >
-            {loading ? "Signing Up..." : "Sign Up"}
-          </button>
         </form>
       </div>
-      <div className={`col-span-1 bg-[url('/quote.jpg')] bg-no-repeat bg-center bg-cover`}>
-
-      </div>
+      <div
+        className={`col-span-1 bg-[url('/quote.jpg')] bg-no-repeat bg-center bg-cover`}
+      ></div>
     </div>
   );
 }
