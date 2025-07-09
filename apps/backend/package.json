@@ -24,6 +24,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
+    "next-auth": "^4.24.11",
     "path": "^0.12.7",
     "socket.io": "^4.8.1",
     "url": "^0.11.4"
