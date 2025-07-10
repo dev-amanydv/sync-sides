@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
+import { signOut } from "next-auth/react";
 
 
 const DashboardPage = () => {
@@ -72,9 +73,8 @@ console.log("userId before useEffect: ", user?.userId)
       </h1>
       <button
         onClick={() => {
-          localStorage.clear();
           clearState();
-          window.location.href = "/auth/login";
+          signOut({ callbackUrl: "/auth/login" });
         }}
         className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mb-4"
       >

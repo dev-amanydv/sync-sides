@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from "../../../../lib/prisma";
 import { compare } from 'bcryptjs';
+import GoogleProvider from "next-auth/providers/google";
 
 console.log("NextAuth configuration loaded");
 console.log("NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET ? "Set" : "Not set");
@@ -59,6 +60,10 @@ const handler = NextAuth({
         }
       },
     }),
+    GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+      })
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
