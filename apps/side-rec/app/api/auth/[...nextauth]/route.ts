@@ -10,7 +10,6 @@ console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
 
 const handler = NextAuth({
   providers: [
-    
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -61,9 +60,10 @@ const handler = NextAuth({
       },
     }),
     GoogleProvider({
-        clientId: process.env.GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!
-      })
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      
+    })
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
@@ -71,7 +71,54 @@ const handler = NextAuth({
   },
   pages: {
     signIn: "/auth/login", 
-    // error: "/auth/login", 
+  },
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      console.log("🔁 signIn callback called");
+
+      if (account?.provider === "google") {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+          });
+
+          if (!existingUser) {
+            await prisma.user.create({
+              data: {
+                email: user.email!,
+                fullname: user.name ?? "No Name",
+                password: "GooglePassword"
+              },
+            });
+          }
+
+          return true;
+        } catch (error) {
+          console.error("❌ Error saving Google user:", error);
+          return false;
+        }
+      }
+
+      return true;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user && token?.user) {
+        session.user.id = token.user.id; // now it's a string
+      }
+      return session;
+    }
   },
   debug: true,
 });

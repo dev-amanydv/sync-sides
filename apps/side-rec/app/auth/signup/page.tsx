@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 const SignupSchema = z
   .object({
@@ -92,8 +93,9 @@ export default function SignupForm() {
       >
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="max-w-lg w-full flex justify-center items-center flex-col   mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
+          className="max-w-lg w-full flex justify-center gap-10 items-center flex-col   mx-auto relative  px-5 py-5 rounded-2xl shadow space-y-4"
         >
+          <div>
           <div className="flex flex-col justify-center items-center">
             <Image src={"/logo.svg"} width={400} height={200} alt="logo" />
             <h1 className="text-xl text-gray-300">Welcomes You!</h1>
@@ -174,9 +176,26 @@ export default function SignupForm() {
             </button>
             
             <p className="text-red-500 text-center">{log}</p>
+
+          </div>
+          
             <div className="border-[1px] border-gray-400 my-5 mx-10">
             </div>
-            <div className="text-white mx-auto">Already have an account? <Link href={'/auth/login'}><button className="font-bold text-blue-700">Login</button></Link></div>
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              className="flex items-center w-full justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 mt-4 font-medium py-2 px-4 rounded-md shadow-sm transition"
+            >
+              {" "}
+              <Image
+                src={"/google-logo.svg"}
+                width={25}
+                height={50}
+                alt="logo"
+              />
+              <h1>Sign in with Google</h1>
+            </button>
+            <div className="text-white text-center mt-4  mx-auto">Already have an account? <Link href={'/auth/login'}><button className="font-bold text-blue-700">Login</button></Link></div>
           </div>
         </form>
       </div>
