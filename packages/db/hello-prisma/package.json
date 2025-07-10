@@ -12,10 +12,11 @@
   },
   "scripts": {
     "queries": "ts-node ./src/queries.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "6.9.0",
+    "@prisma/client": "^6.11.1",
     "@prisma/extension-accelerate": "2.0.1",
     "@types/node": "22.15.32",
     "dotenv": "16.6.1"

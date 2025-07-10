@@ -30,18 +30,25 @@ export default function LoginForm() {
   const router = useRouter();
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log("=== LOGIN FORM SUBMITTED ===");
+    console.log("Form data:", data);
     setLoading(true);
     try {
+      console.log("Calling signIn...");
       const res = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       });
 
+      console.log("signIn response:", res);
+
       if (res?.ok) {
+        console.log("Login successful, redirecting to dashboard");
         reset();
         router.push("/dashboard");
       } else {
+        console.log("Login failed:", res?.error);
         if (res?.error === "CredentialsSignin") {
           setLog("Invalid email or password");
         } else {
