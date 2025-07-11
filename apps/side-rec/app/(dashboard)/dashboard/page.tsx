@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
-
-
+import { useSession } from "next-auth/react";
+import { FaPlay, FaPlus, FaUsers } from "react-icons/fa6";
+import { Users } from 'lucide-react';
+import { GrFormSchedule, GrSchedule } from "react-icons/gr";
+import { PiVideoConference } from "react-icons/pi";
+import { CiTimer } from "react-icons/ci";
+import { GrStorage } from "react-icons/gr";
+import { FiDownload } from "react-icons/fi";
+import { IoShareSocialSharp } from "react-icons/io5";
+import { IoMdTime } from "react-icons/io";
 
 const DashboardPage = () => {
   type Meeting = {
@@ -98,15 +105,7 @@ console.log("userId before useEffect: ", user.userId)
   
     fetchMeetings();
   }, [user?.userId, setMeetings]);
-  const clearState = () => {
-    setUser({
-      userId: "",
-      fullname: "",
-      email: "",
-      profilePic: "",
-    });
-    setMeetings([]);
-  };
+  
   if (status === "loading") {
     return <div className="p-6 max-w-4xl mx-auto">Loading...</div>;
   }
@@ -116,21 +115,118 @@ console.log("userId before useEffect: ", user.userId)
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl text-white font-bold mb-4">
-        Welcome, {user?.email || "User"} 👋
-      </h1>
-      <button
-        onClick={() => {
-          clearState();
-          signOut({ callbackUrl: "/auth/login" });
-        }}
-        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mb-4"
-      >
-        Logout
-      </button>
+    <div className="px-6 mx-auto">
+      <div className="flex flex-col my-6 gap-2">
+        <h1 className="text-3xl text-white font-semibold">
+          Welcome, {user?.fullname || "User"} 👋
+        </h1>
+        <p className="text-gray-400">
+          Ready to record your next important conversation?
+        </p>
+      </div>
+      
+      <div className="flex gap-10 text-white my-6 justify-between w-full ">
+        <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] p-5 ">
+          <div className="flex items-center justify-between gap-3">
+            <div className=" flex gap-2 flex-col">
+              <h1 className="text-lg font-semibold ">Start New Meeting</h1>
+              <p className="text-md text-[#A3A3A3] max-w-55">Create a meeting room and invite participants</p>
+            </div>
+            <div className="rounded-full size-14 flex justify-center items-center bg-[#14532D]"><FaPlus className="text-[#49DE80] text-3xl" /></div>
+          </div>
+          <button onClick={handleCreateMeeting} className="w-full bg-white text-black font-medium text-center py-2 rounded-md">Create Meeting</button>
+        </div>
+        <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] p-5 ">
+          <div className="flex items-center justify-between gap-3">
+            <div className=" flex gap-2 flex-col">
+              <h1 className="text-lg font-semibold ">Join Meeting</h1>
+              <p className="text-md text-[#A3A3A3] max-w-55">Join an existing meeting with room ID</p>
+            </div>
+            <div className="rounded-full size-14 flex justify-center items-center bg-[#14532D]"><Users className="text-[#49DE80] text-3xl" /></div>
+          </div>
+          <button className="w-full bg-white text-black text-center font-medium py-2 rounded-md">Join Meeting</button>
+        </div>
+        <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] p-5 ">
+          <div className="flex items-center justify-between gap-3">
+            <div className=" flex gap-2 flex-col">
+              <h1 className="text-lg font-semibold ">Schedule</h1>
+              <p className="text-md text-[#A3A3A3] max-w-55">View and manage upcoming meetings</p>
+            </div>
+            <div className="rounded-full size-14 flex justify-center items-center bg-[#14532D]"><GrSchedule className="text-[#49DE80] text-2xl" /></div>
+          </div>
+          <button className="w-full bg-white text-black text-center font-medium py-2 rounded-md">View Schedule</button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="my-6">
+        <h1 className="text-2xl font-semibold text-white ">Analytics</h1>
+        <div className=" text-white mt-5 gap-10 px-10 flex justify-between">
+          <div className="flex gap-2  flex-col">
+            <div className="flex gap-10 justify-between"><h1 className="text-xl">Total Meetings</h1><PiVideoConference  className="text-2xl"/></div>
+            <h1 className="text-2xl pl-3 font-bold">{meetings.length}</h1>
+            <p className="text-gray-400">of all time</p>
+          </div>
+          <div className="flex gap-2 flex-col">
+            <div className="flex gap-10 justify-between"><h1 className="text-xl">Total Duration</h1><CiTimer  className="text-2xl"/></div>
+            <h1 className="text-2xl pl-3 font-bold">{meetings.length}</h1>
+            <p className="text-gray-400">Across all hosted meetings</p>
+          </div>          
+          <div className="flex gap-2 flex-col">
+            <div className="flex gap-10 justify-between"><h1 className="text-xl">Storage Used</h1><GrStorage  className="text-2xl"/></div>
+            <h1 className="text-2xl pl-3 font-bold">{meetings.length}</h1>
+            <p className="text-gray-400">Storage used of server</p>
+          </div>        
+        </div>
+      </div>
+      <div className="my-6">
+        <div>
+        <h1 className="text-2xl font-semibold text-white ">Recent Meetings</h1>
+        </div>
+        <div className=" text-white mt-5 gap-5 px-10 flex flex-col">
+          <div className="w-full items-center flex px-5 py-2 rounded-md border-[1px] border-[#2C2C2C] bg-[#0A0A0A] justify-between h-25 ">
+            <div className="flex items-center gap-5">
+              <div className="size-15 border-[1px] rounded-md"></div>
+              <div className="flex flex-col gap-1">
+                <div className="text-lg items-center flex gap-5"><h1>Weekly Team Standup</h1>
+                  <div className="text-[0.8rem] flex items-center h-fit px-4  bg-green-800 text-green-400 rounded-full">Uploading</div>
+                </div>
+                <div className="flex text-[#A3A3A3] gap-3">
+                  <div className="gap-1 flex">
+                  <GrFormSchedule className="text-lg" />
+                    <h1 className="text-[0.8rem]">11/7/2025</h1>
+                  </div>
+                  <div className="gap-1 flex">
+                  <IoMdTime className="text-lg" />
+                    <h1 className="text-[0.8rem]">45:3 Minutes</h1>
+                  </div>
+                  <div className="gap-1 flex">
+                  <FaUsers className="text-md" />
+                    <h1 className="text-[0.8rem]">3 Participants</h1>
+                  </div>
+                </div>
+                <div className="text-[0.8rem] text-[#A3A3A3]">
+                  Participants: Aman Yadav, Laksh Sharma, Nishant Saini, Arbaaz Khan
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 h-fit">
+              <button className="flex rounded-md hover:bg-[#2C2C2C]  gap-2 items-center border-[1px] border-[#2C2C2C] px-4 py-1.5">
+                <FaPlay />
+                <h1>Play</h1>
+              </button>
+              <button className="flex rounded-md hover:bg-[#2C2C2C]  gap-2 items-center border-[1px] border-[#2C2C2C] px-4 py-1.5">
+              <FiDownload className="text-xl"/>
+                <h1>Download</h1>
+              </button>              
+              <button className="flex rounded-md hover:bg-[#2C2C2C]  gap-2 items-center border-[1px] border-[#2C2C2C] px-4 py-1.5">
+              <IoShareSocialSharp  className="text-xl"/>
+                <h1>Share</h1>
+              </button>            
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 my-20 gap-4 mb-6">
         <div className="bg-blue-100 p-4 rounded">
           <p className="text-sm text-gray-600">Total Meetings</p>
           <p className="text-2xl font-bold">{meetings.length}</p>

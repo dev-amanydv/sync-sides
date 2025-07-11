@@ -4,10 +4,29 @@ import io from "socket.io-client";
 
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useStore } from "../../../../store/useStore";
+import { useSession } from "next-auth/react";
 
 const MeetingPage = () => {
   const params = useParams();
+  const {data: session} = useSession();
+  const [user, setUser] = useState({
+    userId: "",
+    fullname: "",
+    email : "",
+    profilePic: ""
+  });
+  useEffect(() => {
+    console.log("Session data:", session);
+    if (session?.user) {
+      console.log("Setting user data:", session.user);
+      setUser({
+        userId: session.user.id ?? "",
+        fullname: session.user.name ?? "",
+        email: session.user.email ?? "",
+        profilePic: session.user.image ?? "",
+      });
+    }
+  }, [session, setUser]);
   const meetingId = params?.id as string;
   const [isRecording, setIsRecording] = useState(false);
   const [isHost, setIsHost] = useState(false);
@@ -29,7 +48,7 @@ const MeetingPage = () => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [duration, setDuration] = useState(0)
 
-  console.log("meetingNoId: ", meetingNoId);
+  console.log("meetingNoId before fetching: ", meetingNoId);
   useEffect(() => {
     const fetchInitialParticipants = async () => {
       if (!meetingId) return;
@@ -41,7 +60,7 @@ const MeetingPage = () => {
         console.log("data of getMeeting: ", data);
         if (res.ok && Array.isArray(data.meeting.participants)) {
           setMeetingNoId(data.meeting.id);
-          if (user?.userId && data.meeting.hostId === Number(user.userId)) {
+          if (user?.userId == data.meeting.hostId ) {
             setIsHost(true);
           }
           const joined = data.meeting.participants.filter(
@@ -92,7 +111,6 @@ const MeetingPage = () => {
 
     alert("You left the meeting.");
   };
-  const { user, setUser } = useStore();
   const [hasHydrated, setHasHydrated] = useState(false);
   const socket = useRef<any>(null);
 
@@ -104,17 +122,6 @@ const MeetingPage = () => {
       remoteVideoRef.current.srcObject = remoteStream;
     }
   }, [remoteStream]);
-
-  useEffect(() => {
-    const rawUserId = localStorage.getItem("userId");
-    const rawemail = localStorage.getItem("email");
-
-    if (rawUserId) {
-      setUser({ userId: rawUserId, email: rawemail || "" });
-    }
-
-    setHasHydrated(true);
-  }, []);
 
   const [mergeLog, setMergeLog] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -410,9 +417,7 @@ const MeetingPage = () => {
 
   if (!meetingId) return <div>Invalid Meeting ID</div>;
 
-  if (!hasHydrated) {
-    return <div className="text-white p-6">Loading...</div>;
-  }
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
