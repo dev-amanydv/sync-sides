@@ -28,7 +28,6 @@ const handler = NextAuth({
           console.log("Missing email or password");
           throw new Error("Missing credentials");
         }
-
         try {
           const user = await prisma.user.findUnique({
             where: { email },
@@ -104,11 +103,19 @@ const handler = NextAuth({
 
     async jwt({ token, user }) {
       if (user) {
-        token.user = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        };
+        const dbUser = await prisma.user.findUnique({
+          where:{
+            email: user.email?.toString()
+          }
+        })
+        if (dbUser){
+          token.user = {
+            id: dbUser.id.toString(),
+            name: user.name,
+            email: user.email,
+          };
+        }
+        
       }
       return token;
     },

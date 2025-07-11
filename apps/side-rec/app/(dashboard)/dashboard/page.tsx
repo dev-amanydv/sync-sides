@@ -2,17 +2,31 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRecoilState } from "recoil";
-import { meetingsState, userState } from "../../../store/userAtom";
+
 
 
 const DashboardPage = () => {
+  type Meeting = {
+    id: number,
+    title: string,
+    createdAt: string,
+    meetingId: string,
+    durationMs: number,
+    uploaded?: boolean,
+    status: "Uploaded" | "Processing" | "Available"
+  }
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [joinId, setJoinId] = useState("");
-  const [user, setUser] = useRecoilState(userState);
-  const [ meetings, setMeetings ] = useRecoilState(meetingsState)
   const { data: session, status } = useSession();
+  console.log("session: ", session);
+  const [meetings, setMeetings] = useState<Meeting[]>([])
+  const [user, setUser] = useState({
+    userId: "",
+    fullname: "",
+    email : "",
+    profilePic: ""
+  })
   useEffect(() => {
     console.log("Session data:", session);
     if (session?.user) {
