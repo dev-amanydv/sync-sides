@@ -1,52 +1,70 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useStore } from "../../../store/useStore";
-import { signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { useRecoilState } from "recoil";
+import { meetingsState, userState } from "../../../store/userAtom";
 
 
 const DashboardPage = () => {
-  const { meetings,setUser, user,setMeetings, clearState } = useStore();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [joinId, setJoinId] = useState("");
+  const [user, setUser] = useRecoilState(userState);
+  const [ meetings, setMeetings ] = useRecoilState(meetingsState)
+  const { data: session, status } = useSession();
+  useEffect(() => {
+    console.log("Session data:", session);
+    if (session?.user) {
+      console.log("Setting user data:", session.user);
+      setUser({
+        userId: session.user.id ?? "",
+        fullname: session.user.name ?? "",
+        email: session.user.email ?? "",
+        profilePic: session.user.image ?? "",
+      });
+    }
+  }, [session, setUser]);
 
-useEffect(() => {
-  const rawUserId = localStorage.getItem("userId");
-  const rawemail = localStorage.getItem("email"); 
 
-  if (rawUserId) {
-    setUser({
-      userId: rawUserId,
-      email: rawemail || "",
-    });
-  }
-}, []);
-
-  const filteredMeetings = meetings.filter((meeting) =>
+  const filteredMeetings = (meetings || []).filter((meeting) =>
     meeting.title.toLowerCase().includes(search.toLowerCase())
   );
-console.log("userId before useEffect: ", user?.userId)
+console.log("userId before useEffect: ", user.userId)
   const generateMeetingId = () => Math.random().toString(36).substring(2, 10);
 
   const handleCreateMeeting = async () => {
-    if (!user?.userId) return;
-    const meetingId = generateMeetingId();
-    const res = await fetch("http://localhost:4000/api/meeting/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hostId: user.userId, title: "Untitled Meeting", meetingId }),
-    });
-    const data = await res.json();
-    console.log("data: ", data);
-    if (data.meeting.meetingId) {
-      window.location.href = `/meeting/${data.meeting.meetingId}`;
+    if (!user.userId) {
+      console.error("No user ID available");
+      return;
+    }
+    try {
+      const meetingId = generateMeetingId();
+      const res = await fetch("http://localhost:4000/api/meeting/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId: user.userId, title: "Untitled Meeting", meetingId }),
+      });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      console.log("data: ", data);
+      if (data.meeting?.meetingId) {
+        window.location.href = `/meeting/${data.meeting.meetingId}`;
+      } else {
+        console.error("No meeting ID in response:", data);
+      }
+    } catch (error) {
+      console.error("Error creating meeting:", error);
     }
   };
   useEffect(() => {
     console.log("fetching meeting history...");
     const fetchMeetings = async () => {
-      if (!user?.userId) {
+      if (!user.userId) {
         console.warn("No userId found. Skipping fetch.");
         return;
       }
@@ -55,16 +73,33 @@ console.log("userId before useEffect: ", user?.userId)
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         console.log("Fetched meetings:", data);
-        setMeetings(data.meetings); 
+        setMeetings(data.meetings || []); 
       } catch (error) {
         console.error("Error fetching meetings:", error);
+        setMeetings([]);
       } finally {
         setLoading(false);
       }
     };
   
     fetchMeetings();
-  }, [user?.userId]);
+  }, [user?.userId, setMeetings]);
+  const clearState = () => {
+    setUser({
+      userId: "",
+      fullname: "",
+      email: "",
+      profilePic: "",
+    });
+    setMeetings([]);
+  };
+  if (status === "loading") {
+    return <div className="p-6 max-w-4xl mx-auto">Loading...</div>;
+  }
+
+  if (status === "unauthenticated") {
+    return <div className="p-6 max-w-4xl mx-auto">Please log in to access the dashboard.</div>;
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -136,9 +171,9 @@ console.log("userId before useEffect: ", user?.userId)
                     <p className="text-sm text-gray-600">
                       {new Date(meeting.createdAt).toLocaleString()}
                     </p>
-                    {meeting.duration && (
+                    {meeting.durationMs && (
                       <p className="text-xs text-gray-500">
-                        Duration: {meeting.duration} min
+                        Duration: {meeting.durationMs} min
                       </p>
                     )}
                     <p
