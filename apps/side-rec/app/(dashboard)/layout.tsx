@@ -26,7 +26,7 @@ export default function DashboardLayout({
 }>) {
 
   return (
-    <div className={`${inter.className}`}>
+    <div>
       <Appbar />
       <div className="pt-17 bg-[#000000]">
         <div className="fixed top-[68px] bottom-0 w-[20%] pb-7 justify-between items-center flex flex-col border-r-[1px] border-[#2C2C2C]">

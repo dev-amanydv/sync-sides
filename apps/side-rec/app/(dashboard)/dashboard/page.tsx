@@ -23,6 +23,8 @@ const DashboardPage = () => {
     status: "Uploaded" | "Processing" | "Available"
   }
   const [loading, setLoading] = useState(true);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingJoin, setLoadingJoin] = useState(false);
   const [search, setSearch] = useState("");
   const [joinId, setJoinId] = useState("");
   const [meetingDetails, setMeetingDetails] = useState({
@@ -38,7 +40,10 @@ const DashboardPage = () => {
     email : "",
     profilePic: ""
   })
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [open1, setOpen1] = useState(false);
+  const [open2, setOpen2] = useState(false)
+
   useEffect(() => {
     console.log("Session data:", session);
     if (session?.user) {
@@ -64,12 +69,17 @@ console.log("userId before useEffect: ", user.userId)
       console.error("No user ID available");
       return;
     }
+    if (!meetingDetails.title.trim()) {
+      alert("Please enter a meeting title.");
+      return;
+    }
     try {
+      setLoadingCreate(true);
       const meetingId = generateMeetingId();
       const res = await fetch("http://localhost:4000/api/meeting/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: user.userId, title: "Untitled Meeting", meetingId }),
+        body: JSON.stringify({ hostId: user.userId, title: meetingDetails.title, description:meetingDetails.description, meetingId }),
       });
       
       if (!res.ok) {
@@ -85,7 +95,7 @@ console.log("userId before useEffect: ", user.userId)
       }
     } catch (error) {
       console.error("Error creating meeting:", error);
-    }
+    } finally { setLoadingCreate(false)}
   };
   useEffect(() => {
     console.log("fetching meeting history...");
@@ -110,7 +120,7 @@ console.log("userId before useEffect: ", user.userId)
   
     fetchMeetings();
   }, [user?.userId, setMeetings]);
-  
+
   if (status === "loading") {
     return <div className="p-6 max-w-4xl mx-auto">Loading...</div>;
   }
@@ -120,7 +130,100 @@ console.log("userId before useEffect: ", user.userId)
   }
 
   return (
-    <div className="px-6 mx-auto">
+    <>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
+          <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
+            <h2 className="text-xl mb-1 font-medium">Create New Meeting</h2>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write title and description for your meeting. Click create when you're done.</p>
+            <label className="block mb-2 text-sm"> Title</label>
+            <input
+              type="text"
+              value={meetingDetails.title}
+              onChange={(e) => setMeetingDetails({ ...meetingDetails, title: e.target.value })}
+              className="w-full bg-[#151515] focus:outline-offset-2 focus:outline-[#3F3F3F] focus:outline-[1px] text-white placeholder:text-white placeholder:text-sm border-[1px] mb-4 px-3 py-2 border-[#383838] rounded-lg"
+              placeholder="Enter title"
+            />
+            <label className="block mb-2 text-sm">Description</label>
+            <textarea
+              value={meetingDetails.description}
+              onChange={(e) => setMeetingDetails({ ...meetingDetails, description: e.target.value })}
+              className="w-full bg-[#151515] focus:outline-offset-2 focus:outline-[#3F3F3F] focus:outline-[1px] text-white placeholder:text-white placeholder:text-sm border-[1px] mb-4 px-3 py-2 border-[#383838] rounded-lg"
+              placeholder="Enter description"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 bg-[#151515] transition-all duration-100 hover:bg-[#383838] border-[1px] border-[#383838] rounded-lg "
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleCreateMeeting();
+                  setOpen(false);
+                }} disabled={loadingCreate}
+                className="px-4 py-2 bg-gray-300 rounded-lg text-black hover:bg-gray-400"
+              >
+                {loadingCreate ? "Creating..." : "Create Meeting"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {open1 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
+          <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
+            <h2 className="text-xl mb-1 font-medium">Join Meeting</h2>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write the unique Meeting Id of the meeting you want to join. Click join when you're done.</p>
+            <label className="block mb-2 text-sm"> Meeting ID</label>
+            <input
+              type="text"
+              value={joinId}
+              onChange={(e) => setJoinId( e.target.value )}
+              className="w-full bg-[#151515] focus:outline-offset-2 focus:outline-[#3F3F3F] focus:outline-[1px] text-white placeholder:text-white placeholder:text-sm border-[1px] mb-4 px-3 py-2 border-[#383838] rounded-lg"
+              placeholder="Enter meeting id"
+            />
+            
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setOpen1(false)}
+                className="px-4 py-2 bg-[#151515] transition-all duration-100 hover:bg-[#383838] border-[1px] border-[#383838] rounded-lg "
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                if (joinId) window.location.href = `/meeting/${joinId}`;
+                }} disabled={loadingCreate}
+                className="px-4 py-2 bg-gray-300 rounded-lg text-black hover:bg-gray-400"
+              >
+                {loadingJoin ? "Checking..." : "Join Meeting"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {open2 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
+          <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
+            <h2 className="text-xl mb-1 font-medium">Shedule</h2>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">You can schedule meetings for the future here.</p>
+            <div className="flex justify-center items-center my-10 "> <p className="text-2xl max-w-sm font-bold text-white mb-4">This feature is in development</p>
+            </div>
+            <div className="flex justify-end">
+            <button
+                onClick={() => setOpen2(false)}
+                className="px-4  py-2 bg-[#151515] transition-all duration-100 hover:bg-[#383838] border-[1px] border-[#383838] rounded-lg "
+              >
+                Cancel
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      )}
+      <div className="px-6 mx-auto">
       <div className="flex flex-col mb-8 mt-5 gap-2">
         <h1 className="text-2xl text-gray-200 font-semibold">
           Welcome, {user?.fullname || "User"} 👋
@@ -139,7 +242,12 @@ console.log("userId before useEffect: ", user.userId)
             </div>
             <div className="rounded-full size-14 flex justify-center items-center"><FaPlus className="text-gray-500 text-3xl" /></div>
           </div>
-          <button onClick={handleCreateMeeting} className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out cursor-pointer h-fit bg-gray-300 text-black font-medium text-center py-2 rounded-md">Create Meeting</button>
+          <button
+            onClick={() => {setOpen(true)}}
+            className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out cursor-pointer h-fit bg-gray-300 text-black font-medium text-center py-2 rounded-md"
+          >
+            Create Meeting
+          </button>
         </div>
         <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] px-3 py-4 ">
           <div className="flex items-center justify-between gap-3">
@@ -149,7 +257,8 @@ console.log("userId before useEffect: ", user.userId)
             </div>
             <div className="rounded-full size-14 flex justify-center items-center "><Users className="text-gray-500 text-3xl" /></div>
           </div>
-          <button className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out bg-gray-300 text-black cursor-pointer text-center font-medium py-2 rounded-md">Join Meeting</button>
+          <button onClick={() => {setOpen1(true)}}
+ className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out bg-gray-300 text-black cursor-pointer text-center font-medium py-2 rounded-md">Join Meeting</button>
         </div>
         <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] px-3 py-4 ">
           <div className="flex items-center justify-between gap-3">
@@ -159,7 +268,9 @@ console.log("userId before useEffect: ", user.userId)
             </div>
             <div className="rounded-full size-14 flex justify-center items-center "><GrSchedule className="text-gray-500 text-2xl" /></div>
           </div>
-          <button className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out bg-gray-300 text-black cursor-pointer text-center font-medium py-2 rounded-md">View Schedule</button>
+          <button 
+             onClick={() => {setOpen2(true)}}
+            className="w-full hover:bg-gray-100 hover:shadow-xl hover:shadow-gray-800 transition-all duration-300 ease-in-out bg-gray-300 text-black cursor-pointer text-center font-medium py-2 rounded-md">View Schedule</button>
         </div>
       </div>
 
@@ -247,86 +358,10 @@ console.log("userId before useEffect: ", user.userId)
               ))}
             </ul>
           )}
-          
         </div>
-      </div>
-      <div className="grid grid-cols-2 my-20 gap-4 mb-6">
-        <div className="bg-blue-100 p-4 rounded">
-          <p className="text-sm text-gray-600">Total Meetings</p>
-          <p className="text-2xl font-bold">{meetings.length}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={handleCreateMeeting}
-          className="bg-blue-600 text-gray-200 px-4 py-2 rounded hover:bg-blue-700"
-        >
-          + Create New Meeting
-        </button>
-        
-      </div>
-      <div className="flex items-center gap-4">
-        <input
-          type="text"
-          placeholder="Enter Meeting ID"
-          value={joinId}
-          onChange={(e) => setJoinId(e.target.value)}
-          className="px-3 text-gray-200 py-2 border rounded w-full"
-        />
-        <button
-          onClick={() => {
-            if (joinId) window.location.href = `/meeting/${joinId}`;
-          }}
-          className="bg-green-600 text-gray-200 px-4 py-2 rounded hover:bg-green-700"
-        >
-          Join Meeting
-        </button>
-      </div>
-
-      <div className="mt-4">
-        {loading ? (
-          <p>Loading meetings...</p>
-        ) : filteredMeetings.length === 0 ? (
-          <p>No meetings found.</p>
-        ) : (
-          <ul className="space-y-4">
-            {filteredMeetings.map((meeting) => (
-              <li key={meeting.id} className="border p-4 rounded">
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="font-semibold">{meeting.title}</h2>
-                    <p className="text-sm text-gray-600">
-                      {new Date(meeting.createdAt).toLocaleString()}
-                    </p>
-                    {meeting.durationMs && (
-                      <p className="text-xs text-gray-500">
-                        Duration: {meeting.durationMs} min
-                      </p>
-                    )}
-                    <p
-                      className={`text-xs mt-1 ${
-                        meeting.uploaded ? "text-green-600" : "text-red-500"
-                      }`}
-                    >
-                      {meeting.uploaded ? "Uploaded" : "Not Uploaded"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      (window.location.href = `/meeting/${meeting.meetingId}`)
-                    }
-                    className="text-blue-600 underline mt-1"
-                  >
-                    Go to Meeting
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
+    </>
   );
 };
 
