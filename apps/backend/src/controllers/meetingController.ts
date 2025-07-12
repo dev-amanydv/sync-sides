@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import  prisma  from "hello-prisma";
 
 export const createMeeting = async (req: Request, res: Response): Promise<void> => {
-  const { title, meetingId, hostId } = req.body;
+  const { title, description, meetingId, hostId } = req.body;
 
   if (!title || !hostId) {
     res.status(400).json({ error: "Title and hostId are required" });
@@ -13,6 +13,7 @@ export const createMeeting = async (req: Request, res: Response): Promise<void> 
     const meeting = await prisma.meeting.create({
       data: {
         title,
+        description,
         meetingId,
         host: { connect: { id: Number(hostId) } },
       },

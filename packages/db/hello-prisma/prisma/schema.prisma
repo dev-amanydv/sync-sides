@@ -30,6 +30,7 @@ model Meeting {
   id                Int           @id @default(autoincrement())
   meetingId         String        @unique
   title             String        @default("Untitled")
+  description       String        @default("No description available")
   hostId            Int       
   host              User          @relation("Meeting_host", fields: [hostId], references: [id])
   participants      Participant[]
