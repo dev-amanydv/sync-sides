@@ -62,3 +62,46 @@ console.log("email: ",email)
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const update = async (req: Request, res: Response): Promise<void> => {
+  console.log("request hitted for updation:")
+  const { email, fullname, userId } = req.body;
+  try {
+
+    const updateUser = await prisma.user.update({
+      where:{
+        id: userId
+      },
+      data:{
+        fullname: fullname,
+        email: email
+      }
+    })
+
+
+    res.status(200).json({updateUser });
+  } catch (err) {
+    console.log("error in updation: ", err)
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export const stats = async (req: Request, res: Response): Promise<void> => {
+  console.log("request hitted for stats:")
+  const { userId } = req.body;
+  try {
+
+    const user = await prisma.user.findUnique({
+      where:{
+        id: userId
+      },
+      include: {
+        meetingsHosted: true,
+        participants: true
+      }
+    })
+    res.status(200).json({user });
+  } catch (err) {
+    console.log("error in stats: ", err)
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
