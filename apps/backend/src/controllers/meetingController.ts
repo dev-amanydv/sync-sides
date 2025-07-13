@@ -1,11 +1,25 @@
 import { Request, Response } from "express";
 import  prisma  from "hello-prisma";
+import dns from "dns";
+
+const isConnectedToInternet = async (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    dns.lookup("google.com", (err) => {
+      resolve(!err);
+    });
+  });
+};
 
 export const createMeeting = async (req: Request, res: Response): Promise<void> => {
   const { title, description, meetingId, hostId } = req.body;
 
   if (!title || !hostId) {
     res.status(400).json({ error: "Title and hostId are required" });
+    return;
+  }
+
+  if (!(await isConnectedToInternet())) {
+    res.status(503).json({ error: "No internet connection" });
     return;
   }
 
@@ -31,6 +45,12 @@ export const getMeetingHistory = async (req: Request, res: Response): Promise<vo
 
   if (!userId) {
     res.status(400).json({ error: "User ID is required" });
+    return;
+  }
+
+  if (!(await isConnectedToInternet())) {
+    console.log("no internet")
+    res.status(503).json({ error: "No internet connection" });
     return;
   }
 
@@ -66,6 +86,11 @@ export const joinMeeting = async (req: Request, res: Response): Promise<void> =>
 
   if (!meetingId || !userId) {
     res.status(400).json({ error: "Meeting ID and User ID are required" });
+    return;
+  }
+
+  if (!(await isConnectedToInternet())) {
+    res.status(503).json({ error: "No internet connection" });
     return;
   }
 
@@ -109,6 +134,12 @@ console.log("requesthitted with meetingId: ", meetingId)
     return;
   }
 
+  if (!(await isConnectedToInternet())) {
+    console.log("no internet ")
+    res.status(503).json({ error: "No internet connection" });
+    return;
+  }
+
   try {
     const meeting = await prisma.meeting.findUnique({
       where: { meetingId: meetingId },
@@ -126,10 +157,9 @@ console.log("requesthitted with meetingId: ", meetingId)
       res.status(404).json({ error: "Meeting not found" });
       return;
     }
-
     res.status(200).json({ meeting });
   } catch (error) {
-    console.log("Error getting meeting detailes: ", error)
+    console.log("Error getting meeting detailes: ", error);
     res.status(500).json({ error: "Failed to fetch meeting" });
   }
 };

@@ -11,6 +11,7 @@ import { GrStorage } from "react-icons/gr";
 import { FiDownload } from "react-icons/fi";
 import { IoShareSocialSharp } from "react-icons/io5";
 import { IoIosSearch, IoMdTime } from "react-icons/io";
+import Link from "next/link";
 
 const DashboardPage = () => {
   type Meeting = {
@@ -23,6 +24,7 @@ const DashboardPage = () => {
     status: "Uploaded" | "Processing" | "Available"
   }
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("")
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [search, setSearch] = useState("");
@@ -101,17 +103,25 @@ console.log("userId before useEffect: ", user.userId)
     console.log("fetching meeting history...");
     const fetchMeetings = async () => {
       if (!user.userId) {
-        console.warn("No userId found. Skipping fetch.");
+        console.log("user.userId: ", user.userId)
+        console.log("No userId found. Skipping fetch.");
         return;
       }
       try {
         const res = await fetch(`http://localhost:4000/api/meeting/history/${user.userId}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        console.log("res of meeting history: ", res)
         const data = await res.json();
         console.log("Fetched meetings:", data);
+        if (!res.ok) throw new Error( data.error ||"Failed to fetch meetings");
         setMeetings(data.meetings || []); 
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching meetings:", error);
+
+    if (error.message === "No internet connection") {
+      setErrorMessage("⚠️ No internet connection. Please check your network.");
+    } else {
+      setErrorMessage("Something went wrong while fetching meetings.");
+    }
         setMeetings([]);
       } finally {
         setLoading(false);
@@ -232,7 +242,16 @@ console.log("userId before useEffect: ", user.userId)
           Ready to record your next important conversation?
         </p>
       </div>
-      
+      {errorMessage === "⚠️ No internet connection. Please check your network." ? ( <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
+          <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
+            <h2 className="text-xl mb-1 font-medium">Error</h2>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Refresh again after fixing connection issue.</p>
+            <div className="flex justify-center items-center my-10 "> <p className="text-2xl max-w-sm font-bold text-white mb-4">⚠️ No internet connection. Please check your network.</p>
+            </div>
+            <div className="flex justify-end">
+            </div>
+          </div>
+        </div>) : ("")}
       <div className="flex gap-10 text-gray-200 my-15 justify-between w-full ">
         <div className="bg-[#0A0A0A] gap-5  flex rounded-md flex-col border-[1px] w-sm border-[#2C2C2C] px-3 py-4 ">
           <div className="flex items-center justify-between gap-3">
@@ -305,14 +324,12 @@ console.log("userId before useEffect: ", user.userId)
           onChange={(e) => setSearch(e.target.value)}
         />
         <IoIosSearch className="absolute right-2 text-xl text-gray-500 top-2" /></div>
-        <div>view</div>
+        <Link href={'/recordings'}><button className="text-gray-200 flex cursor-pointer rounded-md hover:bg-[#2C2C2C]  gap-2 items-center border-[1px] border-[#2C2C2C] px-4 py-1.5">View all</button></Link>
         </div>
         <div className=" text-gray-200 mt-5 gap-5 px-10 flex flex-col">
-          {filteredMeetings.length === 0 ? (
-            <div>No meeting found</div>
-          ) : (
-            <ul>
-              {filteredMeetings.map((meeting) => (
+
+          {loading ? (<div className="text-xl font-semibold"> Loading meetings... </div>) : (<ul>
+            {filteredMeetings.map((meeting) => (
                 <div className="w-full items-center flex px-5 py-2 rounded-md border-[1px] border-[#2C2C2C] bg-[#0A0A0A] justify-between h-25 ">
                 <div className="flex items-center gap-5">
                   <div className="size-15 border-[1px] rounded-md"></div>
@@ -356,8 +373,7 @@ console.log("userId before useEffect: ", user.userId)
                 </div>
               </div>
               ))}
-            </ul>
-          )}
+          </ul>)}
         </div>
       </div>
     </div>
