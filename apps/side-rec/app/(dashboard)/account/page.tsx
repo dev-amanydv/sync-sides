@@ -128,7 +128,53 @@ const AccountPage = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-gray-700">Loading account info...</div>;
+    return (
+      <div className="p-8 bg-[#000] min-h-screen text-gray-200 animate-pulse">
+        <h1 className="text-2xl font-semibold mb-2 bg-gray-700 rounded w-40 h-6"></h1>
+        <p className="text-gray-500 mb-6 bg-gray-800 rounded w-72 h-4"></p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Form Skeleton */}
+          <div className="col-span-2 bg-[#0A0A0A] p-6 rounded-lg border border-[#2C2C2C] space-y-4">
+            <div className="h-5 bg-gray-700 rounded w-56"></div>
+            <div className="space-y-4">
+              <div className="h-4 bg-gray-600 rounded w-24"></div>
+              <div className="h-10 bg-gray-800 rounded"></div>
+
+              <div className="h-4 bg-gray-600 rounded w-24"></div>
+              <div className="h-10 bg-gray-800 rounded"></div>
+
+              <div className="h-4 bg-gray-600 rounded w-24"></div>
+              <div className="h-10 bg-gray-800 rounded"></div>
+
+              <div className="h-9 bg-gray-700 rounded w-36"></div>
+            </div>
+          </div>
+
+          {/* Right Side Skeleton */}
+          <div className="space-y-6">
+            {/* Profile Picture Skeleton */}
+            <div className="bg-[#0A0A0A] p-6 rounded-lg border border-[#2C2C2C] text-center space-y-4">
+              <div className="h-5 bg-gray-700 rounded w-40 mx-auto"></div>
+              <div className="w-20 h-20 mx-auto bg-gray-800 rounded-full"></div>
+              <div className="h-9 bg-gray-700 rounded w-full"></div>
+              <div className="h-4 bg-gray-800 rounded w-1/2 mx-auto"></div>
+            </div>
+
+            {/* Stats Skeleton */}
+            <div className="bg-[#0A0A0A] p-6 rounded-lg border border-[#2C2C2C] space-y-4">
+              <div className="h-5 bg-gray-700 rounded w-32"></div>
+              {[...Array(4)].map((_, idx) => (
+                <div className="flex justify-between" key={idx}>
+                  <div className="h-4 bg-gray-600 rounded w-32"></div>
+                  <div className="h-4 bg-gray-800 rounded w-12"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

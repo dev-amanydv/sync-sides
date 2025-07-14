@@ -15,6 +15,7 @@ const MeetingPage = () => {
     email : "",
     profilePic: ""
   });
+  
   useEffect(() => {
     console.log("Session data:", session);
     if (session?.user) {

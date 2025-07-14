@@ -132,7 +132,65 @@ console.log("userId before useEffect: ", user.userId)
   }, [user?.userId, setMeetings]);
 
   if (status === "loading") {
-    return <div className="p-6 max-w-4xl mx-auto">Loading...</div>;
+    return (
+      <div className="p-6 space-y-8 animate-pulse text-white bg-black min-h-screen">
+        <div>
+          <div className="h-6 w-48 bg-gray-700 rounded mb-2" />
+          <div className="h-4 w-80 bg-gray-800 rounded" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="p-6 space-y-4 border border-gray-700 rounded-md bg-[#0A0A0A]">
+              <div className="h-5 w-32 bg-gray-700 rounded" />
+              <div className="h-4 w-full bg-gray-800 rounded" />
+              <div className="h-10 w-full bg-gray-600 rounded" />
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <div className="h-6 w-32 bg-gray-700 rounded mb-4" />
+          <div className="grid grid-cols-3 gap-12 px-10">
+            {[...Array(3)].map((_, i) => (
+              <div key={i}>
+                <div className="h-5 w-40 bg-gray-700 mb-2 rounded" />
+                <div className="h-6 w-12 bg-gray-600 mb-1 rounded" />
+                <div className="h-4 w-32 bg-gray-800 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <div className="h-6 w-48 bg-gray-700 rounded" />
+            <div className="h-8 w-72 bg-gray-900 rounded" />
+            <div className="h-8 w-24 bg-gray-800 rounded" />
+          </div>
+
+          <div className="flex flex-col gap-3 px-10">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex justify-between items-center p-4 bg-[#0A0A0A] border border-[#2C2C2C] rounded-md">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-gray-800 rounded-md" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-40 bg-gray-700 rounded" />
+                    <div className="h-3 w-64 bg-gray-800 rounded" />
+                    <div className="h-3 w-80 bg-gray-800 rounded" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-20 bg-gray-700 rounded" />
+                  <div className="h-8 w-24 bg-gray-700 rounded" />
+                  <div className="h-8 w-20 bg-gray-700 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (status === "unauthenticated") {

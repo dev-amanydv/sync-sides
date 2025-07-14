@@ -89,7 +89,35 @@ const RecordingsPage = () => {
         </div>) : ("")}
 
       {loading ? (
-        <div>Please wait...</div>
+        <div className="space-y-6 animate-pulse">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="w-full flex justify-between items-start px-5 py-4 rounded-md border border-[#2C2C2C] bg-[#0A0A0A]"
+            >
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex items-center gap-4">
+                  <div className="h-5 w-48 bg-gray-700 rounded" />
+                  <div className="h-5 w-24 bg-green-900 rounded" />
+                </div>
+
+                <div className="flex gap-6 mt-2">
+                  <div className="h-4 w-64 bg-gray-800 rounded" />
+                  <div className="h-4 w-40 bg-gray-800 rounded" />
+                  <div className="h-4 w-40 bg-gray-800 rounded" />
+                </div>
+
+                <div className="h-4 w-40 bg-gray-700 rounded" />
+              </div>
+
+              <div className="flex gap-2 mt-2 sm:mt-0">
+                <div className="h-10 w-20 bg-gray-700 rounded" />
+                <div className="h-10 w-28 bg-gray-700 rounded" />
+                <div className="h-10 w-24 bg-gray-700 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : meetings.length === 0 ? (
         <div>No recordings found.</div>
       ) : (
