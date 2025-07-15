@@ -243,7 +243,7 @@ console.log("userId before useEffect: ", user.userId)
       {open1 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
           <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
-            <h2 className="text-xl mb-1 font-medium">Join Meeting</h2>
+            <h2 className="text-xl mb-1 font-medium">Join Meeting </h2>
             <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write the unique Meeting Id of the meeting you want to join. Click join when you&apos;re done.</p>
             <label className="block mb-2 text-sm"> Meeting ID</label>
             <input
