@@ -26,7 +26,6 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("")
   const [loadingCreate, setLoadingCreate] = useState(false);
-  const [loadingJoin, setLoadingJoin] = useState(false);
   const [search, setSearch] = useState("");
   const [joinId, setJoinId] = useState("");
   const [meetingDetails, setMeetingDetails] = useState({
@@ -95,8 +94,12 @@ console.log("userId before useEffect: ", user.userId)
       } else {
         console.error("No meeting ID in response:", data);
       }
-    } catch (error) {
-      console.error("Error creating meeting:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error creating meeting:", error.message);
+      } else {
+        console.error("Error creating meeting:", error);
+      }
     } finally { setLoadingCreate(false)}
   };
   useEffect(() => {
@@ -114,14 +117,12 @@ console.log("userId before useEffect: ", user.userId)
         console.log("Fetched meetings:", data);
         if (!res.ok) throw new Error( data.error ||"Failed to fetch meetings");
         setMeetings(data.meetings || []); 
-      } catch (error:any) {
-        console.error("Error fetching meetings:", error);
-
-    if (error.message === "No internet connection") {
-      setErrorMessage("⚠️ No internet connection. Please check your network.");
-    } else {
-      setErrorMessage("Something went wrong while fetching meetings.");
-    }
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message === "No internet connection") {
+          setErrorMessage("⚠️ No internet connection. Please check your network.");
+        } else {
+          setErrorMessage("Something went wrong while fetching meetings.");
+        }
         setMeetings([]);
       } finally {
         setLoading(false);
@@ -203,7 +204,7 @@ console.log("userId before useEffect: ", user.userId)
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
           <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
             <h2 className="text-xl mb-1 font-medium">Create New Meeting</h2>
-            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write title and description for your meeting. Click create when you're done.</p>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write title and description for your meeting. Click create when you&apos;re done.</p>
             <label className="block mb-2 text-sm"> Title</label>
             <input
               type="text"
@@ -243,7 +244,7 @@ console.log("userId before useEffect: ", user.userId)
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-opacity-100">
           <div className="bg-[#0A0A0A] border-[1px] border-[#232323] text-white rounded-xl  shadow-lg p-6 w-full max-w-xl">
             <h2 className="text-xl mb-1 font-medium">Join Meeting</h2>
-            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write the unique Meeting Id of the meeting you want to join. Click join when you're done.</p>
+            <p className="text-sm max-w-sm text-[#A1A1A1] mb-4">Write the unique Meeting Id of the meeting you want to join. Click join when you&apos;re done.</p>
             <label className="block mb-2 text-sm"> Meeting ID</label>
             <input
               type="text"
@@ -266,7 +267,7 @@ console.log("userId before useEffect: ", user.userId)
                 }} disabled={loadingCreate}
                 className="px-4 py-2 bg-gray-300 rounded-lg text-black hover:bg-gray-400"
               >
-                {loadingJoin ? "Checking..." : "Join Meeting"}
+                {loadingCreate ? "Checking..." : "Join Meeting"}
               </button>
             </div>
           </div>
@@ -388,7 +389,7 @@ console.log("userId before useEffect: ", user.userId)
 
           {loading ? (<div className="text-xl font-semibold"> Loading meetings... </div>) : (<ul>
             {filteredMeetings.map((meeting) => (
-                <div className="w-full items-center flex px-5 py-2 rounded-md border-[1px] border-[#2C2C2C] bg-[#0A0A0A] justify-between h-25 ">
+                <div key={meeting.id} className="w-full items-center flex px-5 py-2 rounded-md border-[1px] border-[#2C2C2C] bg-[#0A0A0A] justify-between h-25 ">
                 <div className="flex items-center gap-5">
                   <div className="size-15 border-[1px] rounded-md"></div>
                   <div className="flex flex-col gap-1">

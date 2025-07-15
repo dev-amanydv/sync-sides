@@ -4,9 +4,7 @@ import prisma from "hello-prisma";
 import { compare } from 'bcryptjs';
 import GoogleProvider from "next-auth/providers/google";
 
-console.log("NextAuth configuration loaded");
-console.log("NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET ? "Set" : "Not set");
-console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+// NOTE: Add NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_CLIENT_ID, and GOOGLE_CLIENT_SECRET to turbo.json dependencies for turbo/no-undeclared-env-vars compliance.
 
 const handler = NextAuth({
   providers: [
@@ -17,7 +15,7 @@ const handler = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         console.log("=== AUTHORIZE FUNCTION CALLED ===");
         const email = credentials?.email;
         const password = credentials?.password;
@@ -59,12 +57,11 @@ const handler = NextAuth({
       },
     }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      
+      clientId: process.env.GOOGLE_CLIENT_ID ?? (() => { throw new Error("GOOGLE_CLIENT_ID is not defined") })(),
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? (() => { throw new Error("GOOGLE_CLIENT_SECRET is not defined") })(),
     })
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ?? (() => { throw new Error("NEXTAUTH_SECRET is not defined") })(),
   session: {
     strategy: 'jwt',
   },
@@ -72,7 +69,7 @@ const handler = NextAuth({
     signIn: "/auth/login", 
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       console.log("🔁 signIn callback called");
 
       if (account?.provider === "google") {
@@ -111,7 +108,7 @@ const handler = NextAuth({
         if (dbUser){
           token.user = {
             id: dbUser.id.toString(),
-            name: user.name,
+            name: dbUser.fullname,
             email: user.email,
           };
         }

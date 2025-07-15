@@ -20,7 +20,7 @@ type Meeting = {
 const RecordingsPage = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [errorMessage, setErrorMessage] = useState('');
   const [user, setUser] = useState({
     userId: "",
@@ -57,8 +57,8 @@ const RecordingsPage = () => {
         }
 
         setMeetings(data.meetings || []);
-      } catch (error: any) {
-        if (error.message === 'no internet connection') {
+      } catch (error: unknown) {
+        if ((error as Error).message === 'no internet connection') {
           setErrorMessage('⚠️ No internet connection. Please check your network.');
         } else {
           setErrorMessage('Something went wrong while fetching recordings.');

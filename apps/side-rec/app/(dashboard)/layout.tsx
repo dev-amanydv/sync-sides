@@ -1,5 +1,4 @@
 "use client"
-import type { Metadata } from "next";
 import Appbar from "../../components/Appbar";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { BiVideoRecording } from "react-icons/bi";

@@ -1,11 +1,22 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalDependencies": [
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "NEXTAUTH_SECRET"
+  ]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -15,7 +26,12 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXTAUTH_SECRET"
+      ]
     }
   }
 }

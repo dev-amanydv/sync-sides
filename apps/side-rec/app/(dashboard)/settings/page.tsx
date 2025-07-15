@@ -3,9 +3,6 @@ import React, { useState } from 'react';
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState('dark');
-  const [autoStart, setAutoStart] = useState(false);
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
   const [recordingQuality, setRecordingQuality] = useState('1080p Full HD');
 
   return (

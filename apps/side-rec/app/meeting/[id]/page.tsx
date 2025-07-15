@@ -5,6 +5,7 @@ import io from "socket.io-client";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Socket } from "socket.io-client";
 
 const MeetingPage = () => {
   const params = useParams();
@@ -65,7 +66,7 @@ const MeetingPage = () => {
             setIsHost(true);
           }
           const joined = data.meeting.participants.filter(
-            (p: any) => p.hasJoined
+            (p: unknown) => (p as { hasJoined: boolean }).hasJoined
           );
           setInitialParticipants(joined);
         }
@@ -75,7 +76,7 @@ const MeetingPage = () => {
     };
 
     fetchInitialParticipants();
-  }, [meetingId]);
+  }, [meetingId, user.userId]);
   console.log(otherSocketId)
   const handleEndMeeting = async () => {
     try {
@@ -112,7 +113,7 @@ const MeetingPage = () => {
 
     alert("You left the meeting.");
   };
-  const socket = useRef<any>(null);
+  const socket = useRef<Socket>(null);
 
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -132,14 +133,15 @@ const MeetingPage = () => {
   // Meeting UI overlay state
   const [showMeetingUI, setShowMeetingUI] = useState(false);
 
-  const createPeerConnection = (socket: any, targetSocketId: string) => {
+  const createPeerConnection = (socket: unknown, targetSocketId: string) => {
+    const typedSocket = socket as { emit: (event: string, data: unknown) => void  };
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("ice-candidate", {
+        typedSocket.emit("ice-candidate", {
           candidate: event.candidate,
           to: targetSocketId,
         });
@@ -208,7 +210,7 @@ const MeetingPage = () => {
         const detailData = await detailRes.json();
         if (detailRes.ok && Array.isArray(detailData.meeting.participants)) {
           const filtered = detailData.meeting.participants.filter(
-            (participant: any) => participant.hasJoined
+            (participant: { id: number; email: string; hasJoined: boolean }) => participant.hasJoined
           );
           setJoinedUsers(filtered);
         }
@@ -230,11 +232,11 @@ const MeetingPage = () => {
       transports: ["websocket"],
     });
 
-    socket.current.on("participants-updated", (updatedUsers: any[]) => {
-      setJoinedUsers(updatedUsers);
+    socket.current.on("participants-updated", (updatedUsers: unknown[]) => {
+      setJoinedUsers(updatedUsers as { id: number; email: string; socketId?: string }[]);
 
-      const otherUser = updatedUsers.find((u) => u.id !== Number(user?.userId));
-      if (otherUser) {
+      const otherUser = (updatedUsers as Array<{ id: number; socketId?: string }>).find((u) => u.id !== Number(user?.userId));
+      if (otherUser && otherUser.socketId) {
         setOtherSocketId(otherUser.socketId);
         otherSocketIdRef.current = otherUser.socketId; // Update the ref
       } else {
@@ -244,34 +246,34 @@ const MeetingPage = () => {
 
     socket.current.on(
       "offer",
-      async ({ offer, from }: { offer: any; from: any }) => {
+      async ({ offer, from }: { offer: unknown; from: unknown }) => {
         console.log("📨 Offer received from:", from);
         if (!peerConnectionRef.current)
-          createPeerConnection(socket.current, from);
+          createPeerConnection(socket.current, from as string);
         await peerConnectionRef.current?.setRemoteDescription(
-          new RTCSessionDescription(offer)
+          new RTCSessionDescription(offer as RTCSessionDescriptionInit)
         );
         const answer = await peerConnectionRef.current?.createAnswer();
         await peerConnectionRef.current?.setLocalDescription(answer);
-        socket.current.emit("answer", { answer, to: from });
+        socket.current?.emit("answer", { answer, to: from });
       }
     );
 
     socket.current.on(
       "answer",
-      async ({ answer, from }: { answer: any; from: any }) => {
+      async ({ answer }:  { answer: unknown }) => {
         await peerConnectionRef.current?.setRemoteDescription(
-          new RTCSessionDescription(answer)
+          new RTCSessionDescription(answer as RTCSessionDescriptionInit)
         );
       }
     );
 
     socket.current.on(
       "ice-candidate",
-      async ({ candidate }: { candidate: any }) => {
+      async ({ candidate }: { candidate: unknown }) => {
         if (peerConnectionRef.current) {
           try {
-            await peerConnectionRef.current.addIceCandidate(candidate);
+            await peerConnectionRef.current.addIceCandidate(candidate as RTCIceCandidateInit);
           } catch (e) {
             console.error("❌ Failed to add ICE candidate", e);
           }
@@ -279,11 +281,11 @@ const MeetingPage = () => {
       }
     );
 
-    socket.current.on("start-call", async ({ to }: { to: any }) => {
-      if (!peerConnectionRef.current) createPeerConnection(socket.current, to);
+    socket.current.on("start-call", async ({ to }: { to: unknown }) => {
+      if (!peerConnectionRef.current) createPeerConnection(socket.current, to as string);
       const offer = await peerConnectionRef.current?.createOffer();
       await peerConnectionRef.current?.setLocalDescription(offer);
-      socket.current.emit("offer", { offer, to });
+      socket.current?.emit("offer", { offer, to });
     });
 
     socket.current.on("meeting-ended", ({ durationMs }: { durationMs: number }) => {
@@ -343,7 +345,7 @@ const MeetingPage = () => {
             `chunk-${chunkIndexRef.current}.webm`
           );
           formData.append("meetingId", meetingId);
-          formData.append("userId", user?.userId!);
+          formData.append("userId", user.userId!);
           formData.append("chunkIndex", chunkIndexRef.current.toString());
 
           try {
@@ -415,7 +417,7 @@ const MeetingPage = () => {
       } else {
         setMergeLog(` Side-by-side merge failed: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       setMergeLog(" Error during side-by-side merge.");
     }
   };

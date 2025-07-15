@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { RxAvatar } from 'react-icons/rx'

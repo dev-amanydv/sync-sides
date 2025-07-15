@@ -122,6 +122,7 @@ const AccountPage = () => {
       }
     } catch (err) {
       alert('Error updating profile');
+      console.log("error : ", err)
     } finally {
       setSaving(false);
     }

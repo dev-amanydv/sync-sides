@@ -148,7 +148,7 @@ export default function LoginForm() {
               <h1>Sign in with Google</h1>
             </button>
             <div className="text-white text-center mt-10 mx-auto">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href={"/auth/signup"}>
                 <button className="font-bold text-blue-700">Signup</button>
               </Link>
