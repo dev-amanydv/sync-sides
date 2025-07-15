@@ -112,7 +112,6 @@ const MeetingPage = () => {
 
     alert("You left the meeting.");
   };
-  const [hasHydrated, setHasHydrated] = useState(false);
   const socket = useRef<any>(null);
 
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -130,6 +129,8 @@ const MeetingPage = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const chunkIndexRef = useRef(0);
   const uploadInterval = 5000;
+  // Meeting UI overlay state
+  const [showMeetingUI, setShowMeetingUI] = useState(false);
 
   const createPeerConnection = (socket: any, targetSocketId: string) => {
     const pc = new RTCPeerConnection({
@@ -211,6 +212,9 @@ const MeetingPage = () => {
           );
           setJoinedUsers(filtered);
         }
+        // Show the meeting UI overlay
+        setShowMeetingUI(true);
+        console.log("showMeetingUI: ", showMeetingUI)
       } else {
         alert(`Join failed: ${data.error}`);
       }
@@ -417,9 +421,14 @@ const MeetingPage = () => {
   };
 
   if (!meetingId) return <div>Invalid Meeting ID</div>;
+  if (showMeetingUI){
+    <div className="fixed inset-0 text-white bg-black w-screen h-screen">
+      hello
+    </div>
+  }
 
-
-
+  // MEETING UI OVERLAY
+  
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
       <h1 className="text-3xl font-bold mb-4">Meeting ID: {meetingId}</h1>
