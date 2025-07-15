@@ -20,8 +20,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "apps/backend",
-    "packages/db/hello-prisma"
+    "apps/backend"
   ],
   "dependencies": {
     "@types/react": "^19.1.8",

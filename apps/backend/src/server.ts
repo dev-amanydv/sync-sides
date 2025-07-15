@@ -11,8 +11,8 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import http from "http";
 import { Server } from "socket.io";
-import  prisma  from "hello-prisma";
-
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 dotenv.config();
 
 const app = express();
@@ -45,6 +45,7 @@ app.use("/api/merge/side-by-side", sideBySideRoutes);
 app.get('/', (req, res) => {
     res.send("sideRec backend is running")
 });
+
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error(err.stack);
@@ -101,7 +102,7 @@ io.on("connection", (socket) => {
         },
       });
 
-      const joinedUsers = updatedParticipants.map((p) => {
+      const joinedUsers = updatedParticipants.map((p: { user: { id: number; email: string } }) => {
         const entry = Array.from(socketUserMap.entries()).find(
           ([, value]) => value.userId === p.user.id && value.meetingNoId === meetingNoId
         );
@@ -171,7 +172,7 @@ io.on("connection", (socket) => {
           },
         });
 
-        const joinedUsers = updatedParticipants.map((p) => {
+        const joinedUsers = updatedParticipants.map((p: { user: { id: number; email: string } }) => {
           const entry = Array.from(socketUserMap.entries()).find(
             ([, value]) => value.userId === p.user.id && value.meetingNoId === meetingNoId
           );
