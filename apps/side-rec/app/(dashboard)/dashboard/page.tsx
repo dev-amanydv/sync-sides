@@ -77,7 +77,7 @@ console.log("userId before useEffect: ", user.userId)
     try {
       setLoadingCreate(true);
       const meetingId = generateMeetingId();
-      const res = await fetch("http://localhost:4000/api/meeting/create", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostId: user.userId, title: meetingDetails.title, description:meetingDetails.description, meetingId }),
@@ -111,7 +111,7 @@ console.log("userId before useEffect: ", user.userId)
         return;
       }
       try {
-        const res = await fetch(`http://localhost:4000/api/meeting/history/${user.userId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/history/${user.userId}`);
         console.log("res of meeting history: ", res)
         const data = await res.json();
         console.log("Fetched meetings:", data);

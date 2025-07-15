@@ -39,7 +39,7 @@ export default function SignupForm() {
     setLoading(true);
     console.log("Form Data:", data);
     try {
-      const res = await fetch("http://localhost:4000/api/auth/signup", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

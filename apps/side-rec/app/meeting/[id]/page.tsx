@@ -56,7 +56,7 @@ const MeetingPage = () => {
       if (!meetingId) return;
       try {
         const res = await fetch(
-          `http://localhost:4000/api/meeting/details/${meetingId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/details/${meetingId}`
         );
         const data = await res.json();
         console.log("data of getMeeting: ", data);
@@ -80,7 +80,7 @@ const MeetingPage = () => {
   console.log(otherSocketId)
   const handleEndMeeting = async () => {
     try {
-      await fetch("http://localhost:4000/api/meeting/end", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/end`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -190,7 +190,7 @@ const MeetingPage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/api/meeting/join", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -205,7 +205,7 @@ const MeetingPage = () => {
         setHasJoined(true);
         setupSocketAfterStream();
         const detailRes = await fetch(
-          `http://localhost:4000/api/meeting/details/${meetingId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/details/${meetingId}`
         );
         const detailData = await detailRes.json();
         if (detailRes.ok && Array.isArray(detailData.meeting.participants)) {
@@ -228,7 +228,7 @@ const MeetingPage = () => {
   const setupSocketAfterStream = () => {
     if (!meetingNoId || !user?.userId) return;
 
-    socket.current = io("http://localhost:4000", {
+    socket.current = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, {
       transports: ["websocket"],
     });
 
@@ -349,7 +349,7 @@ const MeetingPage = () => {
           formData.append("chunkIndex", chunkIndexRef.current.toString());
 
           try {
-            await fetch("http://localhost:4000/api/upload", {
+            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
               method: "POST",
               body: formData,
             });
@@ -389,7 +389,7 @@ const MeetingPage = () => {
 
   const mergeMyChunks = async () => {
     if (!user?.userId || !meetingId) return;
-    const res = await fetch("http://localhost:4000/api/merge", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/merge`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ meetingId, userId: user.userId }),
@@ -401,7 +401,7 @@ const MeetingPage = () => {
   const mergeSideBySide = async () => {
     setMergeLog("Merging side-by-side...");
     try {
-      const res = await fetch("http://localhost:4000/api/merge/side-by-side", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/merge/side-by-side`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

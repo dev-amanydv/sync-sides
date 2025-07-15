@@ -14,7 +14,7 @@ export default function PreviewPage() {
     }, []);
 
   const handleLoad = () => {
-    setVideoUrl(`http://localhost:4000/api/recordings/${meetingId}`);
+    setVideoUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recordings/${meetingId}`);
   };
 
   return (

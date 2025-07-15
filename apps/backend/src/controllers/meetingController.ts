@@ -13,13 +13,15 @@ const isConnectedToInternet = async (): Promise<boolean> => {
 
 export const createMeeting = async (req: Request, res: Response): Promise<void> => {
   const { title, description, meetingId, hostId } = req.body;
-
+console.log("title: ", title, "description: ", description, "meetingId: ", meetingId, "hostId: ", hostId)
   if (!title || !hostId) {
+    console.log("Title and hostId are required")
     res.status(400).json({ error: "Title and hostId are required" });
     return;
   }
 
   if (!(await isConnectedToInternet())) {
+    console.log("Not connected to internet")
     res.status(503).json({ error: "No internet connection" });
     return;
   }
@@ -33,7 +35,7 @@ export const createMeeting = async (req: Request, res: Response): Promise<void> 
         host: { connect: { id: Number(hostId) } },
       },
     });
-
+console.log("meeting created: ", meeting)
     res.status(201).json({ message: "Meeting created", meeting });
   } catch (error) {
     console.log("Error creating meeting: ", error)

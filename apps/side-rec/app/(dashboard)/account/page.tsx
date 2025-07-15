@@ -69,7 +69,7 @@ const AccountPage = () => {
       }
 
       try {
-        const res = await fetch(`http://localhost:4000/api/auth/stats`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/stats`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: Number(userId) }),
@@ -105,7 +105,7 @@ const AccountPage = () => {
     setSaving(true);
 
     try {
-      const res = await fetch(`http://localhost:4000/api/auth/update`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

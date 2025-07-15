@@ -20,7 +20,7 @@ export default function MergePage() {
   const mergeUserChunks = async () => {
     setLog("Merging user's chunks...");
     try {
-      const res = await fetch("http://localhost:4000/api/merge", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/merge`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ meetingId, userId }),
@@ -41,7 +41,7 @@ export default function MergePage() {
   const mergeSideBySide = async () => {
     setLog("Merging side-by-side...");
     try {
-      const res = await fetch("http://localhost:4000/api/merge/side-by-side", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/merge/side-by-side`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ meetingId, userA: userId, userB: partnerId }),
