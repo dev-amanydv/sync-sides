@@ -3,6 +3,8 @@ import Navbar from './Navbar'
 import Hero from './Hero'
 import Features from './Features'
 import CTA from './CTA'
+import HowItWorks from './HowItWorks'
+import Ending from './Ending'
 
 const LandingPage = () => {
   return (
@@ -16,6 +18,8 @@ const LandingPage = () => {
         <Hero/>
         <Features/>
         <CTA/>
+        <HowItWorks />
+        <Ending/>
       </div>
     </div>
   )

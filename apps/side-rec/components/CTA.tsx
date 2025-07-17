@@ -9,7 +9,6 @@ const CTA = () => {
   return (
     <div>
 <LampDemo/>
-<SparklesPreview/>
     </div>
     
   )
