@@ -18,7 +18,6 @@ const LandingPage = () => {
         <Hero/>
         <Features/>
         <CTA/>
-        <HowItWorks />
         <Ending/>
       </div>
     </div>

@@ -63,7 +63,6 @@ const io = new Server(server, {
 
 // A map to associate a socket ID with user and meeting information
 const socketUserMap = new Map();
-
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 

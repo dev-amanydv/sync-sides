@@ -116,6 +116,7 @@ const MeetingPage = () => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>(undefined);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -155,7 +156,7 @@ const hasSignaledReadiness = useRef(false);
   
   // Constants
   const UPLOAD_INTERVAL = 5000;
-  const CONTROLS_HIDE_DELAY = 3000;
+  const CONTROLS_HIDE_DELAY = 20000;
   const RECONNECT_DELAY = 2000;
   const MAX_RECONNECT_ATTEMPTS = 5;
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
@@ -197,6 +198,19 @@ const hasSignaledReadiness = useRef(false);
     
     toastTimeoutsRef.current.set(id, timeoutId);
   }, [toasts]);
+
+  useEffect(()=> {
+    console.log("setting... up local mediaStream")
+    const startLocalMedia = async () => {
+      const stream = await setupMediaStream();
+      setLocalStream(stream);
+      if (localVideoRef.current && localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+     }
+    startLocalMedia();
+    console.log("setted up local mediaStream")
+  }, [])
 
   const removeToast = useCallback((id: string) => {
     const timeoutId = toastTimeoutsRef.current.get(id);
@@ -349,6 +363,8 @@ const hasSignaledReadiness = useRef(false);
         console.log("Adding track to peer connection:", track.kind);
         pc.addTrack(track, streamRef.current as MediaStream);
       });
+    } else {
+      console.log("localstream is not available")
     }
 
     peerConnectionRef.current = pc;
@@ -429,23 +445,24 @@ const hasSignaledReadiness = useRef(false);
 
     socket.current.on("disconnect", (reason) => {
       console.log("Socket disconnected:", reason);
+      hasSignaledReadiness.current = false;
       setConnectionStatus('disconnected');
       addToast("Disconnected from meeting server", "warning");
     });
 
     socket.current.on("participants-updated", (updatedUsers: Participant[]) => {
       console.log("Participants updated:", updatedUsers);
-      
       // Merge new user data with existing state to preserve hand-raise, etc.
-      setJoinedUsers(prevUsers => {
-        return updatedUsers.map(newUser => {
-          const existingUser = prevUsers.find(p => p.id === newUser.id);
-          return {
-            ...existingUser, // Keeps old state like isHandRaised
-            ...newUser,      // Overwrites with fresh data like name and socketId
-          };
-        });
-      });
+      // IMPROVEMENT
+setJoinedUsers(prevUsers => {
+  const userMap = new Map(prevUsers.map(u => [u.id, u]));
+  return updatedUsers.map(newUser => {
+    const existingUser = userMap.get(newUser.id);
+    // Return the existing user's state merged with new data,
+    // or just the new user if they are brand new.
+    return existingUser ? { ...existingUser, ...newUser } : newUser;
+  });
+});
     
       const otherUser = updatedUsers.find(u => u.id !== Number(user?.userId));
     
@@ -497,18 +514,21 @@ const hasSignaledReadiness = useRef(false);
       }
     });
 
-    socket.current.on("ice-candidate", async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-      console.log("Received ICE candidate");
-      try {
-        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-          console.log("ICE candidate added successfully");
-        }
-      } catch (error) {
-        console.error("Error adding ICE candidate:", error);
-      }
-    });
-
+    // IMPROVEMENT
+socket.current.on("ice-candidate", async ({ candidate }) => {
+  try {
+    if (peerConnectionRef.current) { // Just check if the peer connection exists
+      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      console.log("ICE candidate added successfully");
+    }
+  } catch (error: any) {
+    // It's common to see "Error: Cannot add ICE candidate when there is no remote SDP"
+    // This is usually not fatal, so you might want to suppress the log for this specific error.
+    if (!error.message.includes("remote SDP")) {
+      console.error("Error adding ICE candidate:", error);
+    }
+  }
+});
     socket.current.on("meeting-ended", ({ durationMs }: { durationMs: number }) => {
       console.log("Meeting ended with duration:", durationMs);
       setDuration(durationMs);
@@ -590,11 +610,7 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
       
       console.log("Media stream obtained:", stream.getTracks().map(t => t.kind));
       streamRef.current = stream;
-      
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-      
+
       return stream;
     } catch (error: any) {
       console.error("Error accessing media devices:", error);
@@ -619,7 +635,9 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
 
     setIsLoading(true);
     try {
-      await setupMediaStream();
+      const stream = await setupMediaStream();
+      setLocalStream(stream);
+
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -952,28 +970,6 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
 
     const attemptEndMeeting = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/end`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            meetingId,
-            hostId: Number(user?.userId),
-          }),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || `HTTP ${res.status}: ${res.statusText}`);
-        }
-
         addToast("Meeting ended successfully", "success");
         cleanup();
         router.push('/dashboard');
@@ -1175,7 +1171,11 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
       clearAllToasts();
     };
   }, [clearAllToasts]);
-
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
   // Remote video effect
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
@@ -1802,7 +1802,6 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
             <video
               ref={localVideoRef}
               autoPlay
-              muted
               playsInline
               className="w-full h-full object-cover"
             />
