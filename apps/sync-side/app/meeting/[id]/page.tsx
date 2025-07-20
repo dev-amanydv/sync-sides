@@ -905,7 +905,7 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
           formData.append("chunkIndex", chunkIndexRef.current.toString());
 
           try {
-            await fetch("http://localhost:4000/api/upload", {
+            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
               method: "POST",
               body: formData,
             });
@@ -941,7 +941,7 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
       setIsRecording(false);
       addToast("Recording stopped. Your meeting continues.", "info");
       
-        const res = await fetch(`http://localhost:4000/api/meeting/recording`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/recording`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
