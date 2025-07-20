@@ -1,8 +1,8 @@
-"use client"
 import localFont from "next/font/local";
 import "./globals.css";
 import ClientWrapper from "../ClientWrapper";
 import Script from 'next/script';
+import { Metadata } from "next";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,10 +14,10 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
-// export const metadata: Metadata = {
-//   title: "SideRec",
-//   description: "Record meetings in high quality",
-// };
+export const metadata: Metadata = {
+  title: "SyncSides",
+  description: "Record meetings in high quality",
+};
 
 export default function RootLayout({
   children,
