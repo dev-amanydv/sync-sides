@@ -2,6 +2,18 @@
 
 **SyncSides** is a sleek and powerful meeting recording platform built for podcasters, interviewers, and content creators. It offers an intuitive interface and powerful features to help you create high-quality, professional-grade video content effortlessly. 
 
+
+## 📸 Screenshots
+| LandingPage | AuthPage |
+|------|----------|
+|<img width="1440" height="811" alt="Image" src="https://github.com/user-attachments/assets/37a782c3-fc86-4e1d-8070-e766965eb839" /> |<img width="1440" height="811" alt="Image" src="https://github.com/user-attachments/assets/5c508d96-f6d0-410d-b8d3-b4499c106c65" />
+
+| Dashboard | Meeting Room |
+|------|----------|
+|<img width="1440" height="810" alt="Image" src="https://github.com/user-attachments/assets/c740b38b-d98b-4c9b-a6f5-bb29f9977894" /> |<img width="1439" height="809" alt="Image" src="https://github.com/user-attachments/assets/d7518f8a-b0f3-460f-b010-fe4382c9e274" />
+
+
+
 ## 🌟 Features  
 
 -  **Local Video Recording** – Captures each participant's video locally to ensure high-resolution output, regardless of internet stability.
@@ -14,18 +26,6 @@
 
 ## 🌍 Live Demo
 This Project is in development yet.
-
-## 📸 Screenshots
-| LandingPage | AuthPage |
-|------|----------|
-|<img width="1440" alt="Image" src="https://github.com/user-attachments/assets/258cb97e-c028-490d-9f5c-a59aa5a65468" /> |<img width="1440" alt="Image" src="https://github.com/user-attachments/assets/5ed6ba40-7e3e-4dff-93ed-863c15baa65b" /> 
-
-| HomePage | MyArticles |
-|------|----------|
-|<img width="1440" alt="Image" src="https://github.com/user-attachments/assets/578b62d4-814a-45d0-bfc1-351edc2d2aa2" /> |<img width="1440" alt="Image" src="https://github.com/user-attachments/assets/1c75633f-bfa9-44c9-9a19-90998fb32aec" />
-
-
-
 ## 🛠 Tech Stack  
 
 - **Frontend:** Next.js, TypeScript, Express, WebRTC, Tailwind CSS, Socket.IO
