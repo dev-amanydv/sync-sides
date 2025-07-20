@@ -1,6 +1,5 @@
 
 import React from 'react'
-import { SparklesPreview } from './ui/SparklesPreview';
 import { LampDemo } from './ui/Lamp';
 
 

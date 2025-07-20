@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { FaPlay, FaPlus, FaUsers } from "react-icons/fa6";
-import { Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ChevronLeft } from "lucide-react";
 import { GrFormSchedule, GrSchedule } from "react-icons/gr";
 import { PiVideoConference } from "react-icons/pi";
 import { CiTimer } from "react-icons/ci";

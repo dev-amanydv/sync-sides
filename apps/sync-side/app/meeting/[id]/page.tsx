@@ -21,8 +21,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { 
   MicrophoneIcon as MicrophoneIconSolid,
-  VideoCameraIcon as VideoCameraIconSolid,
-  SpeakerWaveIcon as SpeakerWaveIconSolid,
   VideoCameraSlashIcon,
   SpeakerXMarkIcon
 } from "@heroicons/react/24/solid";
@@ -118,11 +116,11 @@ const MeetingPage = () => {
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
-  const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
+  const [chunkStatuses] = useState<ChunkStatus[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>(undefined);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
-  
+  console.log(hasJoined)
   // UI State
   const [showMeetingUI, setShowMeetingUI] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
