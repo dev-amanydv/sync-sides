@@ -166,3 +166,29 @@ console.log("requesthitted with meetingId: ", meetingId)
     res.status(500).json({ error: "Failed to fetch meeting" });
   }
 };
+
+export const saveRecording = async (req: Request, res: Response): Promise<void> => {
+  const { meetingId, NEXT_PUBLIC_BACKEND_URL } = req.body;
+console.log("requesthitted RECORDING with meetingId: ", meetingId)
+  if (!meetingId || !NEXT_PUBLIC_BACKEND_URL) {
+    res.status(400).json({ error: "Meeting ID and backend url is required" });
+    return;
+  }
+
+console.log("updating recording status")
+  try {
+    const meeting = await prisma.meeting.update({
+      where: { meetingId: meetingId },
+      data: {
+        recorded: true,
+        mergedPath: `${NEXT_PUBLIC_BACKEND_URL}/api/recordings/${meetingId}`
+      }
+    });
+console.log("updated recording status")
+console.log("meeting:", meeting)
+    res.status(200).json({ meeting });
+  } catch (error) {
+    console.log("Error in updating recording status: ", error);
+    res.status(500).json({ error: "Failed to update recording status" });
+  }
+};

@@ -36,8 +36,7 @@ model Meeting {
   createdAt         DateTime      @default(now())
   mergedPath        String?
   durationMs        Int?
-  uploaded          Boolean        @default(false)
-  status            RecordingStatus   @default(uploading)
+  recorded          Boolean        @default(false)
 }
 
 model Participant {

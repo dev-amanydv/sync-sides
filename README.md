@@ -12,6 +12,9 @@
 |------|----------|
 |<img width="1440" height="810" alt="Image" src="https://github.com/user-attachments/assets/c740b38b-d98b-4c9b-a6f5-bb29f9977894" /> |<img width="1439" height="809" alt="Image" src="https://github.com/user-attachments/assets/d7518f8a-b0f3-460f-b010-fe4382c9e274" />
 
+## How it actually works?
+
+<img width="4929" height="2470" alt="Image" src="https://github.com/user-attachments/assets/bd32f338-5323-42d6-93d0-f4b6cff33660" />
 
 
 ## 🌟 Features  
@@ -56,6 +59,3 @@ cd frontend
 npm run dev
 ```
 Step-5: Open http://localhost:3000 in your browser.
-
-
-
