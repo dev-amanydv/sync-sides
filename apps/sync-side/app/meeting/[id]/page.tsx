@@ -1428,6 +1428,7 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
 
           {/* Meeting Info */}
           <div className="absolute top-4 left-4 bg-black bg-opacity-50 rounded-lg px-4 py-2">
+            <div className="flex flex-col gap-5">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <ClockIcon className="w-5 h-5" />
@@ -1436,10 +1437,15 @@ socket.current.on("hand-raised", ({ userId, isHandRaised }: { userId: string; is
               <div className="flex items-center space-x-2">
                 <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-400' : connectionStatus === 'connecting' ? 'bg-yellow-400' : 'bg-red-400'}`} />
                 <span className="text-sm">{getConnectionStatusText()}</span>
+                
               </div>
             </div>
+            <div className="text-xl text-slate-300">
+              Meeting ID: {meetingId}
+            </div>
+            </div>
+            
           </div>
-
           {/* Recording Indicator */}
           {isRecording && (
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-600 rounded-full px-4 py-2 flex items-center space-x-2">

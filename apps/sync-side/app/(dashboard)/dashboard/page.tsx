@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { FaPlay, FaPlus, FaUsers } from "react-icons/fa6";
-import { Users } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { GrFormSchedule, GrSchedule } from "react-icons/gr";
 import { PiVideoConference } from "react-icons/pi";
 import { CiTimer } from "react-icons/ci";
@@ -13,6 +13,7 @@ import { IoShareSocialSharp } from "react-icons/io5";
 import { IoIosSearch, IoMdTime } from "react-icons/io";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const DashboardPage = () => {
   type Meeting = {
@@ -40,7 +41,6 @@ const DashboardPage = () => {
     description: "",
   });
   const { data: session, status } = useSession();
-  console.log("session: ", session);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [user, setUser] = useState({
     userId: "",
@@ -55,12 +55,40 @@ const DashboardPage = () => {
     number | null
   >(null);
   const [copiedMeetingId, setCopiedMeetingId] = useState<number | null>(null);
-
+  const [showHowToPopup, setShowHowToPopup] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
+  const steps = [
+    {
+      text: "Both participants must click Start Recording to begin capturing their audio/video.",
+      img: "/record1.svg",
+    },
+    {
+      text: "Once the conversation is over, both must click Stop Recording.",
+      img: "/record2.svg",
+    },
+    {
+      text: "Both participants then need to click Merge Chunks to process their individual recordings.",
+      img: "/record3.svg",
+    },
+    {
+      text: "On one participant's screen, select the other from the list and click Merge Side by Side. Your recording will then be available on the dashboard.",
+      img: "/record4.svg",
+    },
+  ];
   useEffect(() => {
-    console.log("Session ", session);
+    const hasSeenPopup = sessionStorage.getItem("hasSeenHowToPopup");
+    if (!hasSeenPopup) {
+      setShowHowToPopup(true);
+    }
+  }, []);
+  const handleCloseHowToPopup = () => {
+    sessionStorage.setItem("hasSeenHowToPopup", "true");
+    setShowHowToPopup(false);
+  };
+
+  useEffect(() => {
     if (session?.user) {
-      console.log("Setting user ", session.user);
       setUser({
         userId: session.user.id ?? "",
         fullname: session.user.name ?? "",
@@ -69,14 +97,10 @@ const DashboardPage = () => {
       });
     }
   }, [session, setUser]);
-
   const filteredMeetings = (meetings || []).filter((meeting) =>
     meeting.title.toLowerCase().includes(search.toLowerCase())
   );
-
-  console.log("userId before useEffect: ", user.userId);
   const generateMeetingId = () => Math.random().toString(36).substring(2, 10);
-
   const handleCreateMeeting = async () => {
     if (!user.userId) {
       console.error("No user ID available");
@@ -102,13 +126,10 @@ const DashboardPage = () => {
           }),
         }
       );
-
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-
       const data = await res.json();
-      console.log(" ", data);
       if (data.meeting?.meetingId) {
         window.location.href = `/meeting/${data.meeting.meetingId}`;
       } else {
@@ -124,22 +145,16 @@ const DashboardPage = () => {
       setLoadingCreate(false);
     }
   };
-
   useEffect(() => {
-    console.log("fetching meeting history...");
     const fetchMeetings = async () => {
       if (!user.userId) {
-        console.log("user.userId: ", user.userId);
-        console.log("No userId found. Skipping fetch.");
         return;
       }
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meeting/history/${user.userId}`
         );
-        console.log("res of meeting history: ", res);
         const data = await res.json();
-        console.log("Fetched meetings:", data);
         if (!res.ok) throw new Error(data.error || "Failed to fetch meetings");
         setMeetings(data.meetings || []);
       } catch (error: unknown) {
@@ -158,50 +173,29 @@ const DashboardPage = () => {
         setLoading(false);
       }
     };
-
     fetchMeetings();
   }, [user?.userId, setMeetings]);
-  // In your dashboard's page.tsx file
-
-  // ... (inside the DashboardPage component)
-
-  // In your dashboard's page.tsx file
 
   const handleDownload = useCallback(async (meeting: Meeting) => {
     if (!meeting.mergedPath) {
       alert("No recording available for download.");
       return;
     }
-
-    setDownloadingMeetingId(meeting.id); // Set loading state for this specific meeting
-
+    setDownloadingMeetingId(meeting.id);
     try {
-      // Fetch the video data from the URL
       const response = await fetch(meeting.mergedPath);
       if (!response.ok) {
         throw new Error(`Failed to fetch video: ${response.statusText}`);
       }
-
-      // Get the video data as a Blob
       const blob = await response.blob();
-
-      // Create a temporary URL for the Blob
       const url = window.URL.createObjectURL(blob);
-
-      // Create a temporary anchor element
       const link = document.createElement("a");
       link.href = url;
-
-      // Create a clean filename from the meeting title
       const filename = `${meeting.title.replace(/\s+/g, "_")}.webm`;
       link.setAttribute("download", filename);
-
-      // Append the link, click it, and then remove it
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Clean up by revoking the Object URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
@@ -209,22 +203,18 @@ const DashboardPage = () => {
         "Could not download the video. Please check the console for more details."
       );
     } finally {
-      setDownloadingMeetingId(null); // Reset loading state
+      setDownloadingMeetingId(null);
     }
   }, []);
-  // In your apps/side-rec/app/(dashboard)/dashboard/page.tsx file, after your handleDownload function
 
   const handleShare = useCallback(async (meeting: Meeting) => {
     if (!meeting.mergedPath) {
       alert("No recording URL available to share.");
       return;
     }
-
     try {
       await navigator.clipboard.writeText(meeting.mergedPath);
-      setCopiedMeetingId(meeting.id); // Set the copied state for this meeting
-
-      // Reset the "Copied!" message after 2 seconds
+      setCopiedMeetingId(meeting.id);
       setTimeout(() => {
         setCopiedMeetingId(null);
       }, 2000);
@@ -234,15 +224,11 @@ const DashboardPage = () => {
     }
   }, []);
 
-  // ... (rest of your functions and useEffects)
-
-  // Calculate total duration for analytics
   const totalDurationMs = meetings.reduce(
     (acc, meeting) => acc + (meeting.durationMs || 0),
     0
   );
   const totalMinutes = Math.round(totalDurationMs / (1000 * 60));
-
   let formattedDuration = `${totalMinutes} mins`;
   if (totalMinutes > 60) {
     const hours = Math.floor(totalMinutes / 60);
@@ -256,7 +242,6 @@ const DashboardPage = () => {
           <div className="h-6 md:h-8 w-48 md:w-64 bg-gray-700 rounded mb-2" />
           <div className="h-4 w-60 md:w-80 bg-gray-800 rounded" />
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
           {[...Array(3)].map((_, i) => (
             <div
@@ -269,7 +254,6 @@ const DashboardPage = () => {
             </div>
           ))}
         </div>
-
         <div className="px-2">
           <div className="h-6 w-32 bg-gray-700 rounded mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
@@ -282,14 +266,12 @@ const DashboardPage = () => {
             ))}
           </div>
         </div>
-
         <div className="space-y-3 px-2">
           <div className="flex flex-col md:flex-row gap-4 md:gap-0 md:justify-between">
             <div className="h-6 w-48 bg-gray-700 rounded" />
             <div className="h-8 w-full md:w-72 bg-gray-900 rounded" />
             <div className="h-8 w-24 bg-gray-800 rounded" />
           </div>
-
           <div className="flex flex-col gap-3">
             {[...Array(2)].map((_, i) => (
               <div
@@ -316,7 +298,6 @@ const DashboardPage = () => {
       </div>
     );
   }
-
   if (status === "unauthenticated") {
     return (
       <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -324,10 +305,73 @@ const DashboardPage = () => {
       </div>
     );
   }
-
   return (
     <>
-      {/* Create Meeting Modal */}
+      {showHowToPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-black/50 p-4">
+          <div className="bg-[#0A0A0A] border border-[#232323] text-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-lg md:max-w-xl flex flex-col">
+            <h2 className="text-lg md:text-xl mb-4 font-medium text-center">
+              How to Record a Meeting
+            </h2>
+            <div className="relative overflow-hidden flex-grow">
+              <div
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${currentStep * 100}%)` }}
+              >
+                {steps.map((step, index) => (
+                  <div
+                    key={index}
+                    className="w-full flex-shrink-0 px-2 flex flex-col items-center text-center"
+                  >
+                    <p className="text-sm text-gray-300 mb-4 h-12">
+                      {step.text}
+                    </p>
+                    <div className="relative w-full h-48 md:h-64 mb-4">
+                      <Image
+                        src={step.img}
+                        layout="fill"
+                        objectFit="contain"
+                        alt={`Step ${index + 1}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+                disabled={currentStep === 0}
+                className="p-2 rounded-full bg-[#151515] hover:bg-[#2C2C2C] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="flex gap-2">
+                {steps.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      currentStep === i ? "bg-white" : "bg-gray-600"
+                    }`}
+                  ></div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  if (currentStep < steps.length - 1) {
+                    setCurrentStep((prev) => prev + 1);
+                  } else {
+                    handleCloseHowToPopup();
+                  }
+                }}
+                className="px-4 py-2 bg-gray-300 rounded-lg text-black hover:bg-gray-400 text-sm font-medium"
+              >
+                {currentStep < steps.length - 1 ? "Next" : "Got It!"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg bg-black/50 p-4">
           <div className="bg-[#0A0A0A] border border-[#232323] text-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-lg md:max-w-xl">
@@ -466,7 +510,6 @@ const DashboardPage = () => {
       )}
 
       <div className="px-4 md:px-6 mx-auto max-w-7xl">
-        {/* Welcome Section */}
         <div className="flex flex-col mb-6 md:mb-8 mt-4 md:mt-5 gap-2 px-2">
           <h1 className="text-xl md:text-2xl text-gray-200 font-semibold">
             Welcome, {user?.fullname || "User"} 👋
@@ -475,10 +518,7 @@ const DashboardPage = () => {
             Ready to record your next important conversation?
           </p>
         </div>
-
-        {/* Action Cards */}
         <div className="flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-10 text-gray-200 mb-8 md:mb-12 px-2">
-          {/* Create Meeting Card */}
           <div className="bg-[#0A0A0A] gap-4 md:gap-5 flex rounded-md flex-col border border-[#2C2C2C] px-4 md:px-6 py-4 md:py-6 flex-1">
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-2 flex-col flex-1">
@@ -500,8 +540,6 @@ const DashboardPage = () => {
               Create Meeting
             </button>
           </div>
-
-          {/* Join Meeting Card */}
           <div className="bg-[#0A0A0A] gap-4 md:gap-5 flex rounded-md flex-col border border-[#2C2C2C] px-4 md:px-6 py-4 md:py-6 flex-1">
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-2 flex-col flex-1">
@@ -523,8 +561,6 @@ const DashboardPage = () => {
               Join Meeting
             </button>
           </div>
-
-          {/* Schedule Card */}
           <div className="bg-[#0A0A0A] gap-4 md:gap-5 flex rounded-md flex-col border border-[#2C2C2C] px-4 md:px-6 py-4 md:py-6 flex-1">
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-2 flex-col flex-1">
@@ -545,8 +581,6 @@ const DashboardPage = () => {
             </button>
           </div>
         </div>
-
-        {/* Analytics Section */}
         <div className="my-6 md:my-8 px-2">
           <h1 className="text-xl md:text-2xl font-semibold text-gray-200 mb-4 md:mb-6">
             Analytics
@@ -751,9 +785,9 @@ const DashboardPage = () => {
             )}
           </div>
         </div>
+
       </div>
     </>
   );
 };
-
 export default DashboardPage;
