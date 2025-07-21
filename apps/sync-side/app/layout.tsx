@@ -1,8 +1,8 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import ClientWrapper from "../ClientWrapper";
-import Script from 'next/script';
 import { Metadata } from "next";
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,10 +30,7 @@ export default function RootLayout({
         <ClientWrapper>
           {children}
         </ClientWrapper>
-        <Script 
-          src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js" 
-          strategy="beforeInteractive" 
-        />
+        <Analytics />
         </body>
     </html>
   );
