@@ -1,0 +1,12 @@
+name: Keep-Alive Service
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the server
+        run: curl -s "https://side-rec-backend.onrender.com/api/health"

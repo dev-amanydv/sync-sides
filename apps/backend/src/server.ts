@@ -46,6 +46,10 @@ app.get('/', (req, res) => {
     res.send("sideRec backend is running")
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error(err.stack);
@@ -61,19 +65,16 @@ const io = new Server(server, {
   },
 });
 
-// A map to associate a socket ID with user and meeting information
 const socketUserMap = new Map();
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
-// Replace the entire "join-meeting" handler in server.ts with this
 socket.on("join-meeting", async ({ meetingNoId, user }) => {
   socket.join(meetingNoId);
   socketUserMap.set(socket.id, { userId: Number(user.userId), meetingNoId, userEmail: user.email });
 
   try {
-    // ✅ ADDED: Update user's details in the DB with info from their session
-    // This ensures name and email are always current.
+
     await prisma.user.update({
       where: { id: Number(user.userId) },
       data: {
@@ -109,7 +110,7 @@ socket.on("join-meeting", async ({ meetingNoId, user }) => {
         hasJoined: true,
       },
       include: {
-        user: true, // Include the full user object
+        user: true,
       },
     });
     
@@ -121,7 +122,7 @@ socket.on("join-meeting", async ({ meetingNoId, user }) => {
       return {
         id: p.user.id,
         email: p.user.email,
-        name: p.user.fullname, // Now this will be populated
+        name: p.user.fullname,
         socketId,
       };
     });
@@ -132,10 +133,8 @@ socket.on("join-meeting", async ({ meetingNoId, user }) => {
     console.error("❌ Error handling join-meeting:", err);
   }
 });
-// Add this inside the io.on("connection", ...) block in server.ts
 
 socket.on("client-ready", ({ meetingNoId, fromSocketId }) => {
-  // Notify others in the room (specifically the host) that a client is ready
   socket.to(meetingNoId).emit("client-ready", { fromSocketId });
 });
 
@@ -151,17 +150,14 @@ socket.on("client-ready", ({ meetingNoId, fromSocketId }) => {
     io.to(to).emit("ice-candidate", { candidate, from: socket.id });
   });
 
-  // ✅ ADDED: Handler to broadcast chat messages
   socket.on("chat-message", ({ message }) => {
     const userData = socketUserMap.get(socket.id);
     if (userData) {
       const { meetingNoId } = userData;
-      // Broadcast to everyone in the room except the sender
       socket.to(meetingNoId).emit("chat-message", { message });
     }
   });
   
-  // ✅ ADDED: Handler to broadcast hand-raise status
   socket.on("hand-raised", ({ userId, isHandRaised }) => {
     const userData = socketUserMap.get(socket.id);
     if (userData) {
@@ -170,7 +166,6 @@ socket.on("client-ready", ({ meetingNoId, fromSocketId }) => {
     }
   });
 
-  // ✅ ADDED: Handlers for mute and video status for completeness
   socket.on("participant-muted", ({ userId, isMuted }) => {
     const userData = socketUserMap.get(socket.id);
     if (userData) {
@@ -217,7 +212,6 @@ socket.on("client-ready", ({ meetingNoId, fromSocketId }) => {
           },
         });
         
-        // ✅ CHANGED: Map now includes user's name here as well for consistency
         const joinedUsers = remainingParticipants.map((p: Participant & { user: User }) => {
           const entry = Array.from(socketUserMap.entries()).find(
             ([, value]) => value.userId === p.user.id && value.meetingNoId === meetingNoId
@@ -226,14 +220,13 @@ socket.on("client-ready", ({ meetingNoId, fromSocketId }) => {
           return {
             id: p.user.id,
             email: p.user.email,
-            name: p.user.fullname, // Send the user's full name
+            name: p.user.fullname, 
             socketId,
           };
         });
          
         io.to(meetingNoId).emit("participants-updated", joinedUsers);
 
-        // Logic to end meeting if the host disconnects
         const meeting = await prisma.meeting.findUnique({
           where: { id: meetingNoId },
           select: { hostId: true }
