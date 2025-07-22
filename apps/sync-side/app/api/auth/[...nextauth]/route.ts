@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 import { compare } from 'bcryptjs';
 import GoogleProvider from "next-auth/providers/google";
 
-// NOTE: Add NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_CLIENT_ID, and GOOGLE_CLIENT_SECRET to turbo.json dependencies for turbo/no-undeclared-env-vars compliance.
 
 const handler = NextAuth({
   providers: [
@@ -20,13 +19,11 @@ const handler = NextAuth({
         console.log("=== AUTHORIZE FUNCTION CALLED ===");
         const email = credentials?.email;
         const password = credentials?.password;
-        console.log("🔥 authorize called with", credentials);
-        console.log("Attempting login with:", email);
 
         if (!email || !password) {
-          console.log("Missing email or password");
-          throw new Error("Missing credentials");
+          return null;
         }
+
         try {
           const user = await prisma.user.findUnique({
             where: { email },
@@ -34,18 +31,17 @@ const handler = NextAuth({
 
           if (!user) {
             console.log("User not found:", email);
-            throw new Error("User not found");
+            return null;
           }
 
           const isValid = await compare(password, user.password);
 
           if (!isValid) {
             console.log("Invalid password for:", email);
-            throw new Error("Invalid password");
+            return null;
           }
 
           console.log("Login successful for:", email);
-
           return {
             id: user.id.toString(),
             name: user.fullname,
@@ -53,7 +49,7 @@ const handler = NextAuth({
           };
         } catch (error) {
           console.error("Error in authorize function:", error);
-          throw error;
+          throw new Error("Server error during authorization");
         }
       },
     }),
@@ -84,7 +80,8 @@ const handler = NextAuth({
               data: {
                 email: user.email!,
                 fullname: user.name ?? "No Name",
-                password: "GooglePassword"
+
+                password: "not-a-real-password" 
               },
             });
           }
@@ -120,13 +117,14 @@ const handler = NextAuth({
 
     async session({ session, token }) {
       if (session.user && token?.user) {
-        session.user.id = token.user.id; // now it's a string
+        (session.user as any).id = (token.user as any).id;
       }
       return session;
     }
   },
   debug: true,
 });
+
 console.log("✅ AUTH HANDLER LOADED AND RUNNING");
 
 export { handler as GET, handler as POST };

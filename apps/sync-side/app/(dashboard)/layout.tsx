@@ -106,7 +106,7 @@ export default function DashboardLayout({
         `}>
           
           {/* Navigation Items */}
-          <div className="flex flex-col gap-2 md:gap-3 pt-6 md:pt-7 items-center justify-start w-full px-4 md:px-0">
+          <div className="flex flex-col gap-2 md:gap-3 pt-6 md:pt-7 items-center justify-start w-full px-4 md:px-4">
             {navigationItems.map((item) => (
               <div 
                 key={item.path}
