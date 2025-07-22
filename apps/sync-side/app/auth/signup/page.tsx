@@ -188,7 +188,7 @@ export default function SignupForm() {
             >
               {" "}
               <Image
-                src={"/google-logo.svg"}
+                src={"/Google-logo.svg"}
                 width={25}
                 height={50}
                 alt="logo"

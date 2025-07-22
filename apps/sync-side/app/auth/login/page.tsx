@@ -140,7 +140,7 @@ export default function LoginForm() {
             >
               {" "}
               <Image
-                src={"/google-logo.svg"}
+                src={"/Google-logo.svg"}
                 width={25}
                 height={50}
                 alt="logo"
