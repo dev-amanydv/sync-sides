@@ -28,7 +28,7 @@
 -  **Fast & Scalable** – Optimized for performance with a robust backend to handle real-time data and video processing.
 
 ## 🌍 Live Demo
-This Project is in development yet.
+ Checkout here: https://sync-sides-docs.vercel.app/
 ## 🛠 Tech Stack  
 
 - **Frontend:** Next.js, TypeScript, Express, WebRTC, Tailwind CSS, Socket.IO
@@ -38,19 +38,24 @@ This Project is in development yet.
 
 ## 🚀 Getting Started  
 
-### 1️⃣ Clone the Repository  
-Step-1: Navigate to backend folder and start server.
+Step-1: Clone the Repository and install dependencies.
 ```sh
 git clone https://github.com/dev-amanydv/sync-side.git
 cd sync-side
+npm install
+```
+
+Step-2: Get yourself a postgresQl DATABASE_URL. For Sign In with Google method, you'll need GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from https://console.cloud.google.com/
+
+Step-3: Create .env file in the root folder of both apps (sync-side & backend) and copy all variables of .env.example to .env. Replace necessary details with your credentials.
+
+Step-4: Navigate to backend folder and generate Prisma Client.
+```sh
 cd backend
 npx prisma generate
 npx tsc -b
 npm run dev
 ```
-Step-2: Get yourself a postgresQl DATABASE_URL.
-
-Step-3: Set DATABASE_URL and JWT_SECRET in .env files of both apps.
 
 Step-4: Navigate to frontend folder and start server in another terminal.
 ```sh
@@ -58,4 +63,7 @@ cd InkWave
 cd frontend
 npm run dev
 ```
+
 Step-5: Open http://localhost:3000 in your browser.
+
+You're all set to use it locally.
