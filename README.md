@@ -45,7 +45,7 @@
 Step-1: Clone the Repository and install dependencies.
 ```sh
 git clone https://github.com/dev-amanydv/sync-side.git
-cd sync-side
+cd sync-side/apps
 npm install
 ```
 
@@ -63,7 +63,7 @@ npm run dev
 
 Step-4: Navigate to frontend folder and start server in another terminal.
 ```sh
-cd frontend
+cd apps/sync-side
 npm run dev
 ```
 
