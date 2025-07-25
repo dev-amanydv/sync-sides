@@ -2,6 +2,10 @@
 
 **SyncSides** is a sleek and powerful meeting recording platform built for podcasters, interviewers, and content creators. It offers an intuitive interface and powerful features to help you create high-quality, professional-grade video content effortlessly. 
 
+> ⚠️ **Important Note:**  
+> The recording feature does **not** work in production due to high memory usage, which exceeds the limits of our free-tier Render server.  
+>  
+> To try it out, you can **run the project locally** on your machine where the recording works perfectly.
 
 ## 📸 Screenshots
 | LandingPage | AuthPage |
@@ -59,7 +63,6 @@ npm run dev
 
 Step-4: Navigate to frontend folder and start server in another terminal.
 ```sh
-cd InkWave
 cd frontend
 npm run dev
 ```

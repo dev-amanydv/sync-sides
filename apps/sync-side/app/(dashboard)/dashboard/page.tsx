@@ -672,7 +672,11 @@ const DashboardPage = () => {
                             <div className="text-xs px-3 py-1 bg-green-800 text-green-400 rounded-full w-fit">
                               Recording Available
                             </div>
-                          ) : null}
+                          ) :(
+                            <div className="text-xs px-3 py-1 bg-gray-400 text-neutral-900 rounded-full w-fit">
+                              Not Recorded
+                            </div>
+                          ) }
                         </div>
 
                         {/* Meeting Details */}
@@ -764,16 +768,16 @@ const DashboardPage = () => {
                     ) : null}
                     {meeting.recorded ? null : (
                       <div className="flex gap-2 md:gap-2 flex-wrap md:flex-nowrap">
-                        <button className="flex bg-gray-500 text-gray-100 opacity-20 cursor-pointer rounded-md  gap-2 items-center   px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
+                        <button disabled className="flex bg-gray-500 text-gray-100 opacity-20 cursor-pointer rounded-md  gap-2 items-center   px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
                           <FaPlay className="text-xs" />
                           <span>Play</span>
                         </button>
-                        <button className="flex bg-gray-500 text-gray-100 opacity-20 cursor-pointer rounded-md  gap-2 items-center  px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
+                        <button disabled className="flex bg-gray-500 text-gray-100 opacity-20 cursor-pointer rounded-md  gap-2 items-center  px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
                           <FiDownload className="text-sm" />
                           <span className="hidden md:inline">Download</span>
                           <span className="md:hidden">Download</span>
                         </button>
-                        <button className="flex bg-gray-500 text-gray-100 opacity-20 rounded-md cursor-pointer  gap-2 items-center   px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
+                        <button disabled className="flex bg-gray-500 text-gray-100 opacity-20 rounded-md cursor-pointer  gap-2 items-center   px-3 md:px-4 py-2 flex-1 md:flex-none justify-center text-sm">
                           <IoShareSocialSharp className="text-sm" />
                           <span>Share</span>
                         </button>
