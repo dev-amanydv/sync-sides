@@ -1,0 +1,137 @@
+@import "tailwindcss";
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes lobby-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lobby-rise {
+  opacity: 0;
+  animation: lobby-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes lobby-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+}
+.lobby-breathe {
+  animation: lobby-breathe 2.4s ease-in-out infinite;
+}
+.lobby-grid {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+  mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 0%,
+    black 10%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 0%,
+    black 10%,
+    transparent 100%
+  );
+}
+.lobby-scroll {
+  scrollbar-width: none;
+}
+.lobby-scroll::-webkit-scrollbar {
+  display: none;
+}
+@keyframes panel-slide {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.panel-slide {
+  animation: panel-slide 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby-rise {
+    opacity: 1;
+    animation: none;
+  }
+  .lobby-breathe,
+  .panel-slide {
+    animation: none;
+  }
+}
+
+body{
+  background-color: black;
+}
+
+
+.switch {
+  font-size: 17px;
+  position: relative;
+  display: inline-block;
+  width: 3.5em;
+  height: 2em;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  border: 1px solid #2C2C2C;
+  transition: .4s;
+  border-radius: 30px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.4em;
+  width: 1.4em;
+  border-radius: 20px;
+  left: 0.27em;
+  bottom: 0.25em;
+  background-color: #0A0A0A;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #0A0A0A;
+  border: 1px solid #2C2C2C;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #007bff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(1.4em);
+  background-color: #fff;
+}
