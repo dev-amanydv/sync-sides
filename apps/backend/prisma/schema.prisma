@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecordingStatus {
+  recording
+  uploading
+  processing
+  available
+  failed
+}
+
+model User {
+  id                Int           @id @default(autoincrement())
+  email             String        @unique
+  fullname          String
+  image             String?
+  password          String    
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  meetingsHosted    Meeting[]     @relation("Meeting_host")
+  participants      Participant[]
+  feedbacks         Feedback[]
+}
+
+model Meeting {
+  id                Int           @id @default(autoincrement())
+  meetingId         String        @unique
+  title             String        @default("Untitled")
+  description       String        @default("No description available")
+  hostId            Int       
+  host              User          @relation("Meeting_host", fields: [hostId], references: [id])
+  participants      Participant[]
+  createdAt         DateTime      @default(now())
+  mergedPath        String?
+  durationMs        Int?
+  recorded          Boolean        @default(false)
+  recording         Recording?
+  feedbacks         Feedback[]
+}
+
+model Participant {
+  userId            Int
+  meetingNoId       Int
+  hasJoined         Boolean       @default(false)
+  user              User          @relation(fields: [userId], references: [id])
+  meeting           Meeting       @relation(fields: [meetingNoId], references: [id])
+  joinedAt          DateTime?
+  leftAt            DateTime?
+
+  @@id([userId, meetingNoId])
+}
+
+model Recording {
+  id                Int             @id @default(autoincrement())
+  meetingNoId       Int             @unique
+  meeting           Meeting         @relation(fields: [meetingNoId], references: [id])
+  status            RecordingStatus @default(recording)
+  url               String?
+  durationMs        Int?
+  bytes             Int?
+  error             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Feedback {
+  id                Int      @id @default(autoincrement())
+  meetingNoId       Int
+  userId            Int
+  rating            Int
+  comment           String?
+  createdAt         DateTime @default(now())
+  meeting           Meeting  @relation(fields: [meetingNoId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, meetingNoId])
+}

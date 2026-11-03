@@ -1,0 +1,18 @@
+# Taste / Preferences
+- Prefers clean, modular architecture — monolithic files should be split into reusable components and hooks. Confidence: 0.9
+- Prefers simplicity over complexity — remove unnecessary abstractions, hooks, refs, and toast systems that bloat the codebase. Confidence: 0.8
+- Favors performance-first mindset: the app should feel fast and smooth like Google Meet; avoids patterns that cause lag or memory issues. Confidence: 0.9
+- Wants premium, clean, modern, and smooth UI — "clean, premium, modern" are recurring descriptors. Dislikes generic AI-generated design. Confidence: 0.9
+- References Linear.dev style — dark theme with specific design language (e.g., `#08090A` bg, `#5E6AD2` accent). Confidence: 0.8
+- UX is top priority — cares deeply about edge cases in user experience (e.g., no bad connecting states, no black screens when camera off, proper redirect flows). Confidence: 0.9
+- Expects senior product-designer-level output — wants thoughtful, polished design decisions, not basic or generic solutions. Confidence: 0.8
+- Meeting/lobby pages should be full-screen (no scrolling), occupying the entire viewport. Confidence: 0.8
+- Writes polished toast notifications — clean, premium, modern toast UI is important. Confidence: 0.8
+- Prefers clear visual feedback for system state — recording status indicators (uploading, processing, merging, recorded, etc.) should be shown to users. Confidence: 0.8
+- Responsive design across the whole project is a priority; not just desktop. Confidence: 0.7
+- When camera is off, prefers a polished placeholder/overlay (like Google Meet) rather than a black screen. Confidence: 0.7
+- Auth flow must be seamless — after sign-up from a shared meeting link, user should be redirected to the meeting, not the dashboard or login page. Confidence: 0.7
+- Host-only controls: recording and other privileged actions should only be visible to the host, not all participants. Confidence: 0.7
+- Prefers free-tier hosting (Oracle free tier, Render free tier 512MB) and optimizes architecture accordingly. Confidence: 0.7
+- Uses Cloudflare R2 as cloud object storage; committed to this service rather than other storage backends. Confidence: 0.9
+- Prefers automatic background processing — merging, uploading, and video generation should happen automatically without manual intervention. Confidence: 0.9
