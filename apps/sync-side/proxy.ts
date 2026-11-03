@@ -7,7 +7,7 @@ const safeCallbackUrl = (url: string | null) =>
 
 export async function proxy(request: NextRequest) {
 
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req: request as never, secret: process.env.NEXTAUTH_SECRET });
   const isLoggedIn = !!token;
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isLandingPage = request.nextUrl.pathname === '/';
